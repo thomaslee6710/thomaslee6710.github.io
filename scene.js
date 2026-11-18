@@ -260,17 +260,17 @@ function drawQuadruped(predictive=false){
 function drawEffortLines(a,centerY,spread){
   const p=route(a),ahead=route(a+.09);
   const rise=terrainDepth(p.x,p.y)-terrainDepth(ahead.x,ahead.y);
-  if(obstacleEffort(a)<.16||rise<.018)return;
+  if(obstacleEffort(a)<.16||Math.abs(rise)<.018)return;
   const pulse=.45+.28*Math.sin(elapsed*20);
   ctx.save();
   clipToTerrain(p.x*width-spread-15,p.x*width+spread+15,p.y);
   ctx.strokeStyle="rgba(249,221,161,"+pulse+")";
   ctx.lineWidth=1.5;ctx.lineCap="round";
   const marks=[
-    {side:-1,gap:4,offset:-8,length:20,phase:.4,lean:-3},
-    {side:-1,gap:10,offset:4,length:10,phase:2.1,lean:2},
-    {side:1,gap:5,offset:3,length:17,phase:3.3,lean:4},
-    {side:1,gap:10,offset:-10,length:12,phase:1.4,lean:-2},
+    {side:-1,gap:4,offset:-20,length:17,phase:.4,lean:-3},
+    {side:-1,gap:10,offset:-14,length:9,phase:2.1,lean:2},
+    {side:1,gap:5,offset:13,length:13,phase:3.3,lean:4},
+    {side:1,gap:10,offset:21,length:8,phase:1.4,lean:-2},
   ];
   for(const {side,gap,offset,length,phase,lean} of marks){
     const x=p.x*width+side*(spread+gap);
