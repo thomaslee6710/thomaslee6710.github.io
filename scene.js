@@ -40,7 +40,10 @@ function updateGrid(){
       const y=(j+.5)/rows,x=(i+.5)/cols+.09*(y-.5);
       const depth=terrainDepth(x,y);
       // Fade by the row's original position so lifting it carries its opacity upward.
-      const rowOpacity=Math.sin(Math.PI*clamp(.14+.72*y,0,1))**2;
+      const topFade=clamp((.14+.72*y)/.28,0,1);
+      const screenY=projectY(x,y)/height;
+      const bottomFade=clamp((1-screenY)/.12,0,1);
+      const rowOpacity=topFade*topFade*bottomFade*bottomFade;
       if(rowOpacity<.002)continue;
       mesh.globalAlpha=rowOpacity;
       const slope=(terrainDepth(x+.012,y)-terrainDepth(x-.012,y))*6+
@@ -105,17 +108,23 @@ function body(px,hip,feet,ghost){
   }
   feet.forEach(([fx,fy],i)=>{
     const hx=px+(i?3:-3)*s,hy=hip;
-    const dx=fx-hx,dy=fy-hy,dist=Math.max(1,Math.hypot(dx,dy));
-    const bend=Math.sqrt(Math.max(0,(28*s)**2-(dist/2)**2));
-    const knee=[(hx+fx)/2+dir*dy/dist*bend,(hy+fy)/2-dir*dx/dist*bend];
-    limb([[hx,hy],knee,[fx,fy-3*s],[fx+dir*8*s,fy-2*s]],i?"#f0dbba":"#83a59d",6);
+    const dx=fx-hx,dy=fy-3*s-hy;
+    const reach=Math.hypot(dx,dy);
+    const segment=28*s;
+    const dist=clamp(reach,.001,2*segment);
+    const ux=reach>0?dx/reach:0,uy=reach>0?dy/reach:1;
+    const ankle=[hx+ux*dist,hy+uy*dist];
+    const bend=Math.sqrt(Math.max(0,segment**2-(dist/2)**2));
+    const knee=[(hx+ankle[0])/2+(dir<0?-1:1)*uy*bend,(hy+ankle[1])/2-(dir<0?-1:1)*ux*bend];
+    limb([[hx,hy],knee,ankle,[ankle[0]+dir*8*s,ankle[1]+s]],i?"#f0dbba":"#83a59d",6);
   });
   plate(px-10*s,hip-28*s,21*s,30*s,6*s,"#cee0d6");
   plate(px-7*s,hip-46*s,16*s,16*s,5*s,"#e2e9df");
   if(!ghost)plate(px+(-3+3*dir)*s,hip-42*s,8*s,4*s,1,"#173d41");
   for(const n of [-1,1]){
-    const swing=n*(ghost?-side:side)*Math.cos(robot.phase*Math.PI)*9*s;
-    limb([[px+n*5*s,hip-22*s],[px+swing-dir*4*s,hip-10*s],[px+1.6*swing+dir*3*s,hip-3*s]],n>0?"#efbb7d":"#839e96",4);
+    const swing=n*(ghost?-side:side)*Math.cos(robot.phase*Math.PI)*13*s;
+    const shoulder=px+n*3*s;
+    limb([[shoulder,hip-22*s],[shoulder+swing,hip-11*s],[shoulder+1.55*swing,hip-5*s]],n>0?"#efbb7d":"#839e96",4);
   }
   ctx.restore();
 }
