@@ -127,11 +127,7 @@ function body(px,hip,feet,ghost){
 
 // In this projection larger ground-y is nearer the viewer. The foremost
 // terrain silhouette hides the part of a figure below it at each screen x.
-function visibleBody(u,v,hip,feet,ghost){
-  const center=u*width;
-  const left=Math.min(center-48,...feet.map(p=>p[0]-24));
-  const right=Math.max(center+48,...feet.map(p=>p[0]+24));
-  ctx.save();
+function clipToTerrain(left,right,v){
   ctx.beginPath();ctx.moveTo(left,-headroom);ctx.lineTo(right,-headroom);
   for(let px=right;px>=left-3;px-=3){
     let rim=Infinity;
@@ -140,6 +136,14 @@ function visibleBody(u,v,hip,feet,ghost){
     ctx.lineTo(px,rim+1);
   }
   ctx.closePath();ctx.clip();
+}
+
+function visibleBody(u,v,hip,feet,ghost){
+  const center=u*width;
+  const left=Math.min(center-48,...feet.map(p=>p[0]-24));
+  const right=Math.max(center+48,...feet.map(p=>p[0]+24));
+  ctx.save();
+  clipToTerrain(left,right,v);
   body(center,hip,feet,ghost);
   ctx.restore();
 }
@@ -156,16 +160,23 @@ function draw(){
   const hip=pelvisY??ground-legLength;
   ctx.save();
   // Render only the remaining swing, from the lifted foot to touchdown.
-  ctx.strokeStyle="#f1cc87";ctx.lineWidth=1.8;ctx.beginPath();
-  for(let i=0;i<=20;i++){
+  ctx.strokeStyle="#f1cc87";ctx.lineWidth=1.8;ctx.lineCap="round";
+  let start=swingPoint(robot.phase);
+  for(let i=1;i<=20;i++){
     const phase=robot.phase+(1-robot.phase)*i/20;
-    const [px,py]=swingPoint(phase);
-    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
+    const end=swingPoint(phase);
+    const midPhase=phase-(1-robot.phase)/40;
+    const depth=interpolateFoot(trailing,target,midPhase).y;
+    ctx.save();
+    clipToTerrain(Math.min(start[0],end[0])-2,Math.max(start[0],end[0])+2,depth);
+    ctx.beginPath();ctx.moveTo(...start);ctx.lineTo(...end);ctx.stroke();
+    ctx.restore();start=end;
   }
-  ctx.stroke();
-  // Keep just the takeoff and touchdown rings for this swing.
   for(const contact of [trailing,target]){
-    ctx.beginPath();ctx.ellipse(contact.x*width,projectY(contact.x,contact.y),7,3,0,0,2*Math.PI);ctx.stroke();
+    const px=contact.x*width;
+    ctx.save();clipToTerrain(px-9,px+9,contact.y);
+    ctx.beginPath();ctx.ellipse(px,projectY(contact.x,contact.y),7,3,0,0,2*Math.PI);ctx.stroke();
+    ctx.restore();
   }
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   visibleBody(robot.x,robot.y,hip,feet,false);
