@@ -1,79 +1,121 @@
 const canvas = document.querySelector("canvas");
-const slider = document.querySelector("#position");
 const ctx = canvas.getContext("2d");
-const surface = (x,y) => .4*Math.sin(x*6+y*3)+.28*Math.cos(x*11-y*5)+.16*Math.sin(y*9+x*3);
-function draw() {
-  const {width:w,height:h} = canvas.getBoundingClientRect();
-  const scale = Math.min(devicePixelRatio || 1,2);
-  canvas.width = Math.round(w*scale);
-  canvas.height = Math.round(h*scale);
-  ctx.setTransform(scale,0,0,scale,0,0);
-  const center = .12 + .77*Number(slider.value)/100;
-  const contacts = [-.085,-.042,0].map((offset,i) => {
-    const x = center+offset, y = .48+.09*Math.sin(x*14+i);
-    return {x,y,z:surface(x,y)};
-  });
-  function estimate(x,y) {
-    let sum = 0, weight = .08;
-    for (const p of contacts) {
-      const k = Math.exp(-24*((x-p.x)**2+(y-p.y)**2));
-      sum += k*p.z;
-      weight += k;
+const statusLine = document.querySelector(".status");
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const height = (x,y) => .38*Math.sin(2*x+y)+.19*Math.cos(x-3*y);
+const sample = (x,y) => ({x,y,z:height(x,y)});
+let contacts = [sample(-.65,.24),sample(-.24,.05),sample(.13,.19)];
+let aim = {...contacts[2]}, legHeight = aim.z;
+let yaw = -.32, pitch = .58, zoom = 1, width, viewHeight, unit;
+let gesture, frame;
+function estimate(x,y) {
+  let sum=0, weight=.07;
+  for(const p of contacts){
+    const d=(x-p.x)**2+(y-p.y)**2;
+    if(d<.00001) return p.z;
+    const k=Math.exp(-2*d)/(.02+d);
+    weight+=k; sum+=k*p.z;
+  }
+  return sum/weight;
+}
+function project(x,y,z){
+  const u=x*Math.cos(yaw)-y*Math.sin(yaw);
+  const v=x*Math.sin(yaw)+y*Math.cos(yaw);
+  return [width/2+unit*u,viewHeight*.56+unit*(v*Math.sin(pitch)-z*Math.cos(pitch))];
+}
+function line(points,color,thickness){
+  ctx.beginPath(); points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+  ctx.strokeStyle=color;ctx.lineWidth=thickness;ctx.stroke();
+}
+function dot(pos,r,color){
+  ctx.beginPath();ctx.arc(...pos,r,0,2*Math.PI);ctx.fillStyle=color;ctx.fill();
+}
+function draw(){
+  ctx.clearRect(0,0,width,viewHeight);
+  unit=Math.min(width/3.6,viewHeight/2.15)*zoom;
+  for(let axis=0;axis<2;axis++){
+    for(let i=0;i<=40;i++){
+      const points=[];
+      for(let j=0;j<=64;j++){
+        const x=-1.6+3.2*(axis?i/40:j/64), y=-1+2*(axis?j/64:i/40);
+        points.push(project(x,y,estimate(x,y)));
+      }
+      line(points,axis?"#376d62":"#70a992",1);
     }
-    return sum/weight;
   }
-  function project(x,y,z) {
-    return [w*(x+.12*(y-.5)), h*(.27+.61*y-.19*z-.06*Math.sin(x*5))];
-  }
-  function point(x,y) {return project(x,y,estimate(x,y));}
-  function stroke(points,color) {
-    ctx.beginPath();
-    points.forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
-    ctx.strokeStyle=color;
-    ctx.stroke();
-  }
-  const cols = Math.max(32, Math.round(w/18)), rows = 26;
-  for(let j=0;j<=rows;j++) {
-    const y=j/rows;
-    stroke(Array.from({length:cols+1},(_,i)=>point(-.12+1.24*i/cols,y)), 'rgba(137,199,173,'+(.19+.47*y)+')');
-  }
-  for(let i=0;i<=cols;i++) {
-    const x=-.12+1.24*i/cols;
-    stroke(Array.from({length:rows+1},(_,j)=>point(x,j/rows)), '#356362');
-  }
-  const marks=contacts.map(p=>project(p.x,p.y,p.z));
-  stroke(marks,'#e3f3ad');
-  marks.forEach(([x,y],i)=>{
-    ctx.beginPath();ctx.arc(x,y,4+i,0,2*Math.PI);
-    ctx.fillStyle='#d3ed91';ctx.fill();
-    if(i===2){ctx.beginPath();ctx.arc(x,y,12,0,2*Math.PI);ctx.strokeStyle='#d3ed91';ctx.stroke();}
-  });
-  const [footX,footY] = marks[2];
-  const side = footX < w/2 ? 1 : -1;
-  ctx.save();
-  ctx.translate(footX,footY);
-  ctx.scale(side,1);
-  ctx.lineCap="round";
-  ctx.lineJoin="round";
-  const leg=[[42,-98],[14,-87],[33,-54],[0,-8]];
-  ctx.lineWidth=13;
-  stroke(leg,"#101f24");
-  ctx.lineWidth=7;
-  stroke(leg,"#e9dfc8");
-  for(const [x,y] of leg.slice(1,3)){
-    ctx.beginPath();ctx.arc(x,y,8,0,2*Math.PI);ctx.fillStyle="#708681";ctx.fill();
-    ctx.beginPath();ctx.arc(x,y,3,0,2*Math.PI);ctx.fillStyle="#e9dfc8";ctx.fill();
-  }
-  ctx.beginPath();ctx.ellipse(0,-5,10,6,0,0,2*Math.PI);ctx.fillStyle="#f1bc7b";ctx.fill();
-  ctx.restore();
+  for(const p of contacts) dot(project(p.x,p.y,p.z),5,"#ffca77");
+  const {x,y}=aim;
+  const pad=project(x,y,legHeight);
+  const leg=[project(x+.22,y,legHeight+.73),project(x-.08,y,legHeight+.63),project(x+.15,y,legHeight+.36),pad];
+  ctx.lineCap="round";ctx.lineJoin="round";
+  line(leg,"#0c2225",13);line(leg,"#eee7d2",7);
+  leg.slice(1,3).forEach(p=>{dot(p,8,"#68867e");dot(p,3,"#f4eacb");});
+  dot(pad,7,"#ffca77");
 }
-function move(event) {
-  const bounds=canvas.getBoundingClientRect();
-  slider.value=Math.round(100*((event.clientX-bounds.left)/bounds.width-.12)/.77);
+function resize(){
+  const box=canvas.getBoundingClientRect(), ratio=Math.min(devicePixelRatio,2);
+  width=box.width;viewHeight=box.height;canvas.width=width*ratio;canvas.height=viewHeight*ratio;
+  ctx.setTransform(ratio,0,0,ratio,0,0);draw();
+}
+function step(x,y){
+  cancelAnimationFrame(frame);
+  const p=sample(x,y), prediction=estimate(x,y);
+  aim=p;const start=performance.now();
+  const duration=matchMedia("(prefers-reduced-motion: reduce)").matches?0:330;
+  function lower(now){
+    const t=duration?clamp((now-start)/duration,0,1):1;
+    legHeight=p.z+.45*(1-t);
+    if(t<1) frame=requestAnimationFrame(lower);
+    else {
+      contacts=[...contacts.slice(-2),p];
+      const diff=p.z-prediction;
+      statusLine.textContent=Math.abs(diff)<.035?"Contact matched the estimate.":diff>0?"The foot met higher ground. The mesh rose around it.":"The foot landed lower. The mesh dipped around it.";
+    }
+    draw();
+  }
+  lower(start);
+}
+function pick(px,py){
+  let best, distance=Infinity;
+  for(let i=0;i<=80;i++) for(let j=0;j<=50;j++){
+    const x=-1.6+i*.04,y=-1+j*.04;
+    const [sx,sy]=project(x,y,estimate(x,y));
+    const d=(px-sx)**2+(py-sy)**2;
+    if(d<distance){distance=d;best={x,y};}
+  }
+  if(distance<28**2) step(best.x,best.y);
+}
+canvas.onpointerdown=e=>{
+  if(!e.isPrimary) return;
+  canvas.setPointerCapture(e.pointerId);
+  gesture={x:e.clientX,y:e.clientY,yaw,pitch,drag:false};
+};
+canvas.onpointermove=e=>{
+  if(!gesture||!e.isPrimary)return;
+  const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
+  if(Math.hypot(dx,dy)>4)gesture.drag=true;
+  if(gesture.drag){yaw=gesture.yaw+dx*.008;pitch=clamp(gesture.pitch+dy*.006,.18,1.42);draw();}
+};
+canvas.onpointerup=e=>{
+  if(!gesture||!e.isPrimary)return;
+  if(!gesture.drag){const b=canvas.getBoundingClientRect();pick(e.clientX-b.left,e.clientY-b.top);}
+  gesture=null;
+};
+canvas.onpointercancel=()=>{gesture=null;};
+function magnify(factor){zoom=clamp(zoom*factor,.65,2.3);draw();}
+canvas.addEventListener("wheel",e=>{e.preventDefault();magnify(Math.exp(-e.deltaY*.0015));},{passive:false});
+document.querySelector("#in").onclick=()=>magnify(1.2);
+document.querySelector("#out").onclick=()=>magnify(1/1.2);
+document.querySelector("#reset").onclick=()=>{yaw=-.32;pitch=.58;zoom=1;draw();};
+canvas.onkeydown=e=>{
+  if(e.key==="Enter"){step(aim.x,aim.y);return;}
+  if(!e.key.startsWith("Arrow"))return;
+  e.preventDefault();
+  const dx=Number(e.key==="ArrowRight")-Number(e.key==="ArrowLeft");
+  const dy=Number(e.key==="ArrowDown")-Number(e.key==="ArrowUp");
+  if(e.shiftKey){yaw+=dx*.14;pitch=clamp(pitch+dy*.1,.18,1.42);}
+  else{cancelAnimationFrame(frame);aim={x:clamp(aim.x+dx*.12,-1.6,1.6),y:clamp(aim.y+dy*.12,-1,1)};legHeight=estimate(aim.x,aim.y)+.15;}
   draw();
-}
-canvas.addEventListener("pointerdown",move);
-canvas.addEventListener("pointermove",event=>{if(event.buttons===1) move(event);});
-slider.addEventListener("input",draw);
-new ResizeObserver(draw).observe(canvas);
-draw();
+};
+new ResizeObserver(resize).observe(canvas);
+resize();
