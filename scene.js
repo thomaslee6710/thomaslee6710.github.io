@@ -34,11 +34,17 @@ function dot(pos,r,color){
 function draw(){
   ctx.clearRect(0,0,width,viewHeight);
   unit=Math.min(width/3.6,viewHeight/2.15)*zoom;
+  // Invert the fixed camera projection to cover all four viewport corners.
+  const halfU=width/(2*unit);
+  const halfV=.60*viewHeight/(unit*Math.sin(pitch));
+  const extentX=Math.ceil((halfU*Math.abs(Math.cos(yaw))+halfV*Math.abs(Math.sin(yaw))+.7)*8);
+  const extentY=Math.ceil((halfU*Math.abs(Math.sin(yaw))+halfV*Math.abs(Math.cos(yaw))+.7)*8);
   for(let axis=0;axis<2;axis++){
-    for(let i=0;i<=40;i++){
+    const across=axis?extentX:extentY, along=axis?extentY:extentX;
+    for(let i=-across;i<=across;i++){
       const points=[];
-      for(let j=0;j<=64;j++){
-        const x=-1.6+3.2*(axis?i/40:j/64), y=-1+2*(axis?j/64:i/40);
+      for(let j=-along;j<=along;j++){
+        const x=(axis?i:j)/8, y=(axis?j:i)/8;
         points.push(project(x,y,estimate(x,y)));
       }
       line(points,axis?"#376d62":"#70a992",1);
