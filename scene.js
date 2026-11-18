@@ -195,7 +195,7 @@ function drawSwing(from,to,progress,color){
   }
 }
 function drawQuadruped(predictive=false){
-  const a=angle-.62+(predictive?.18:0);
+  const a=angle-1.03+(predictive?.18:0);
   const dog=route(a);
   const scale=Math.min(1,width/530), dir=dog.direction<0?-1:1;
   const px=dog.x*width;
@@ -222,7 +222,7 @@ function drawQuadruped(predictive=false){
     const dx=foot.x*width-hipX,dy=projectY(foot.x,foot.y)-swingLift(from,to,swing)-hipY;
     const bearing=Math.atan2(dx,dy),segment=15*scale;
     const reach=clamp(Math.hypot(dx,dy),segment*.45,segment*1.93);
-    const bend=Math.acos(reach/(2*segment))*front*dir;
+    const bend=-Math.acos(reach/(2*segment))*dir;
     const kneeX=hipX+Math.sin(bearing+bend)*segment,kneeY=hipY+Math.cos(bearing+bend)*segment;
     ctx.beginPath();ctx.moveTo(hipX,hipY);ctx.lineTo(kneeX,kneeY);
     ctx.lineTo(hipX+Math.sin(bearing)*reach,hipY+Math.cos(bearing)*reach);
