@@ -220,7 +220,13 @@ function drawSwing(from,to,progress,color){
 function drawQuadruped(predictive=false){
   const a=dogAngle+(predictive?.18:0);
   const dog=route(a);
-  const scale=Math.min(1,width/530), dir=dog.direction<0?-1:1;
+  const scale=Math.min(1,width/530);
+  const forwardX=-Math.sin(a),forwardY=Math.cos(a);
+  const rightX=-forwardY,rightY=forwardX;
+  const projectBody=(long,wide)=>[
+    (long*forwardX+wide*rightX)*scale,
+    (long*forwardY+wide*rightY)*scale*.45
+  ];
   const px=dog.x*width;
   const legs=[];
   const step=.18, duty=.62;
@@ -229,7 +235,10 @@ function drawQuadruped(predictive=false){
     const cycle=a/step+offset, phase=cycle-Math.floor(cycle);
     const anchor=(Math.floor(cycle)-offset)*step+front*.063+step*duty/2;
     const from=route(anchor),to=route(anchor+step);
-    from.y+=lateral*.025;to.y+=lateral*.025;
+    for(const [point,heading] of [[from,anchor],[to,anchor+step]]){
+      point.x-=lateral*Math.cos(heading)*9*scale/width;
+      point.y-=lateral*Math.sin(heading)*.025;
+    }
     const swing=Math.max(0,(phase-duty)/(1-duty));
     const foot=interpolateFoot(from,to,swing);
     legs.push({front,lateral,from,to,swing,foot});
@@ -241,11 +250,12 @@ function drawQuadruped(predictive=false){
   ctx.lineCap="round";ctx.lineJoin="round";
   if(predictive)ctx.setLineDash([3,4]);
   for(const {front,lateral,from,to,swing,foot} of legs){
-    const hipX=px+front*dir*16*scale,hipY=torso+lateral*2*scale;
+    const [hipOffsetX,hipOffsetY]=projectBody(front*16,lateral*7);
+    const hipX=px+hipOffsetX,hipY=torso+hipOffsetY;
     const dx=foot.x*width-hipX,dy=projectY(foot.x,foot.y)-swingLift(from,to,swing)-hipY;
     const bearing=Math.atan2(dx,dy),segment=15*scale;
     const reach=clamp(Math.hypot(dx,dy),segment*.45,segment*1.93);
-    const bend=-Math.acos(reach/(2*segment))*dir;
+    const bend=-Math.acos(reach/(2*segment))*forwardX;
     const kneeX=hipX+Math.sin(bearing+bend)*segment,kneeY=hipY+Math.cos(bearing+bend)*segment;
     ctx.beginPath();ctx.moveTo(hipX,hipY);ctx.lineTo(kneeX,kneeY);
     ctx.lineTo(hipX+Math.sin(bearing)*reach,hipY+Math.cos(bearing)*reach);
@@ -253,8 +263,17 @@ function drawQuadruped(predictive=false){
     ctx.strokeStyle=predictive?"rgba(168,221,214,.66)":lateral>0?"#c6ded8":"#759b96";
     ctx.stroke();
   }
-  ctx.beginPath();ctx.roundRect(px-22*scale,torso-8*scale,44*scale,13*scale,4*scale);
-  if(predictive)ctx.stroke();else{ctx.fillStyle="#91bcb3";ctx.fill();}
+  const corners=[[22,-9],[22,9],[-22,9],[-22,-9]];
+  for(const lift of [0,6]){
+    ctx.beginPath();
+    corners.forEach(([long,wide],i)=>{
+      const [x,y]=projectBody(long,wide);
+      if(i)ctx.lineTo(px+x,torso+y-lift*scale);
+      else ctx.moveTo(px+x,torso+y-lift*scale);
+    });
+    ctx.closePath();
+    if(predictive)ctx.stroke();else{ctx.fillStyle=lift?"#a3cdc4":"#628f86";ctx.fill();}
+  }
   ctx.restore();
 }
 function drawEffortLines(a,centerY,spread){
