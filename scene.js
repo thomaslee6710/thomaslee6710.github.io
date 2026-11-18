@@ -1,33 +1,61 @@
-const scene = document.getElementById("scene");
-const caption = document.getElementById("caption");
-const panels = {
-  step: {
-    observed: "Foot sinks",
-    predicted: "Unload the next step",
-    caption: caption.textContent
-  },
-  push: {
-    observed: "Object shifts",
-    predicted: "Try a shorter push",
-    caption: "A brief push moves the object farther than expected. A world model could use that displacement to predict where a shorter push would leave it before the robot commits."
-  }
-};
-
-function draw(kind) {
-  const data = panels[kind];
-  const halves = [0, 1].map((future) => {
-    const color = future ? "#b6e78b" : "#f2f2d9";
-    const depth = future ? 125 : 143;
-    const shape = kind === "step"
-      ? '<path d="M12 118 Q48 116 62 118 T93 '+depth+' T127 118 H203" fill="none" stroke="#89aaa0" stroke-width="3"/><path d="M50 51 L107 72 L87 '+(depth-5)+' h18" fill="none" stroke="'+color+'" stroke-linejoin="round" stroke-width="7"/><circle cx="107" cy="72" r="5" fill="#152f31" stroke="'+color+'" stroke-width="2"/>'
-      : '<path d="M12 130 H202 M32 100 H74" fill="none" stroke="#89aaa0" stroke-width="3"/><rect x="76" y="78" width="48" height="50" fill="none" stroke="#89aaa0" stroke-dasharray="4 4"/><rect x="'+(future?93:122)+'" y="78" width="48" height="50" fill="#244344" stroke="'+color+'" stroke-width="3"/>';
-    return '<g transform="translate('+ (future*230) +' 0)"><text x="12" y="24" fill="'+color+'" font-family="monospace" font-size="13">'+(future?"PREDICTED":"OBSERVED")+'</text>'+shape+'<text x="12" y="177" fill="'+color+'" font-family="sans-serif" font-size="16">'+(future?data.predicted:data.observed)+'</text></g>';
+const canvas = document.querySelector("canvas");
+const slider = document.querySelector("#position");
+const ctx = canvas.getContext("2d");
+const surface = (x,y) => .4*Math.sin(x*6+y*3)+.28*Math.cos(x*11-y*5)+.16*Math.sin(y*9+x*3);
+function draw() {
+  const {width:w,height:h} = canvas.getBoundingClientRect();
+  const scale = Math.min(devicePixelRatio || 1,2);
+  canvas.width = Math.round(w*scale);
+  canvas.height = Math.round(h*scale);
+  ctx.setTransform(scale,0,0,scale,0,0);
+  const center = .12 + .77*Number(slider.value)/100;
+  const contacts = [-.085,-.042,0].map((offset,i) => {
+    const x = center+offset, y = .48+.09*Math.sin(x*14+i);
+    return {x,y,z:surface(x,y)};
   });
-  scene.innerHTML = halves.join("");
-  caption.textContent = data.caption;
+  function estimate(x,y) {
+    let sum = 0, weight = .08;
+    for (const p of contacts) {
+      const k = Math.exp(-24*((x-p.x)**2+(y-p.y)**2));
+      sum += k*p.z;
+      weight += k;
+    }
+    return sum/weight;
+  }
+  function project(x,y,z) {
+    return [w*(x+.12*(y-.5)), h*(.27+.61*y-.19*z-.06*Math.sin(x*5))];
+  }
+  function point(x,y) {return project(x,y,estimate(x,y));}
+  function stroke(points,color) {
+    ctx.beginPath();
+    points.forEach(([x,y],i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y));
+    ctx.strokeStyle=color;
+    ctx.stroke();
+  }
+  const cols = Math.max(32, Math.round(w/18)), rows = 26;
+  for(let j=0;j<=rows;j++) {
+    const y=j/rows;
+    stroke(Array.from({length:cols+1},(_,i)=>point(-.12+1.24*i/cols,y)), 'rgba(137,199,173,'+(.19+.47*y)+')');
+  }
+  for(let i=0;i<=cols;i++) {
+    const x=-.12+1.24*i/cols;
+    stroke(Array.from({length:rows+1},(_,j)=>point(x,j/rows)), '#356362');
+  }
+  const marks=contacts.map(p=>project(p.x,p.y,p.z));
+  stroke(marks,'#e3f3ad');
+  marks.forEach(([x,y],i)=>{
+    ctx.beginPath();ctx.arc(x,y,4+i,0,2*Math.PI);
+    ctx.fillStyle='#d3ed91';ctx.fill();
+    if(i===2){ctx.beginPath();ctx.arc(x,y,12,0,2*Math.PI);ctx.strokeStyle='#d3ed91';ctx.stroke();}
+  });
 }
-
-document.querySelectorAll('input[name="scene"]').forEach(input => {
-  input.addEventListener("change", () => draw(input.value));
-});
-draw(document.querySelector('input[name="scene"]:checked').value);
+function move(event) {
+  const bounds=canvas.getBoundingClientRect();
+  slider.value=Math.round(100*((event.clientX-bounds.left)/bounds.width-.12)/.77);
+  draw();
+}
+canvas.addEventListener("pointerdown",move);
+canvas.addEventListener("pointermove",event=>{if(event.buttons===1) move(event);});
+slider.addEventListener("input",draw);
+new ResizeObserver(draw).observe(canvas);
+draw();
