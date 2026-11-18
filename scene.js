@@ -118,14 +118,22 @@ function body(px,hip,feet,ghost){
     const knee=[(hx+ankle[0])/2+(dir<0?-1:1)*uy*bend,(hy+ankle[1])/2-(dir<0?-1:1)*ux*bend];
     limb([[hx,hy],knee,ankle,[ankle[0]+dir*8*s,ankle[1]+s]],i?"#f0dbba":"#83a59d",6);
   });
+  function arm(near){
+    const sideOfTorso=near?1:-1;
+    const cycle=(ghost?-side:side)*Math.cos(robot.phase*Math.PI)*sideOfTorso;
+    const facing=dir<0?-1:1;
+    const shoulder=[px+sideOfTorso*6*s,hip-22*s];
+    const upper=cycle*.56;
+    const forearm=upper+.32+.44*Math.max(0,cycle);
+    const elbow=[shoulder[0]+facing*Math.sin(upper)*13*s,shoulder[1]+Math.cos(upper)*13*s];
+    const wrist=[elbow[0]+facing*Math.sin(forearm)*11*s,elbow[1]+Math.cos(forearm)*11*s];
+    limb([shoulder,elbow,wrist],near?"#efbb7d":"#839e96",4);
+  }
+  arm(false);
   plate(px-10*s,hip-28*s,21*s,30*s,6*s,"#cee0d6");
   plate(px-7*s,hip-46*s,16*s,16*s,5*s,"#e2e9df");
   if(!ghost)plate(px+(-3+3*dir)*s,hip-42*s,8*s,4*s,1,"#173d41");
-  for(const n of [-1,1]){
-    const swing=n*(ghost?-side:side)*Math.cos(robot.phase*Math.PI)*13*s;
-    const shoulder=px+n*3*s;
-    limb([[shoulder,hip-22*s],[shoulder+swing,hip-11*s],[shoulder+1.55*swing,hip-5*s]],n>0?"#efbb7d":"#839e96",4);
-  }
+  arm(true);
   ctx.restore();
 }
 
