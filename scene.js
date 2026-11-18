@@ -282,14 +282,14 @@ function drawQuadruped(predictive=false){
   if(predictive)ctx.stroke();else{ctx.fillStyle="#91bcb3";ctx.fill();}
   ctx.restore();
 }
-function drawEffortLines(a,centerY,spread){
+function drawEffortLines(a,centerY,spread,color="#f9dda1"){
   const p=route(a),ahead=route(a+.09);
   const rise=terrainDepth(p.x,p.y)-terrainDepth(ahead.x,ahead.y);
   if(obstacleEffort(a)<.16||Math.abs(rise)<.018)return;
   ctx.save();
   const center=p.x*width;
   clipToTerrain(center-spread-36,center+spread+36,p.y);
-  ctx.strokeStyle="#f9dda1";
+  ctx.strokeStyle=color;
   ctx.lineWidth=1.7;ctx.lineCap="round";
   const marks=[
     {side:-1,offset:-17,length:14,tilt:-6,phase:0},
@@ -332,7 +332,7 @@ function draw(){
   drawQuadruped(true);
   drawQuadruped();
   const dog=route(dogAngle);
-  if(!dogPause.left)drawEffortLines(dogAngle,projectY(dog.x,dog.y)-30,28);
+  if(!dogPause.left)drawEffortLines(dogAngle,projectY(dog.x,dog.y)-30,28,"#74dad7");
   visibleBody(robot.x,robot.y,hip,feet,false);
   if(!humanPause.left)drawEffortLines(angle,hip-22,18);
   ctx.restore();
