@@ -110,8 +110,8 @@ function body(px,hip,feet,ghost){
     const hx=px+(i?3:-3)*s,hy=hip;
     const dx=fx-hx,dy=fy-3*s-hy;
     const reach=Math.hypot(dx,dy);
-    const segment=28*s;
-    const dist=clamp(reach,.001,2*segment);
+    const segment=25*s;
+    const dist=clamp(reach,.001,1.94*segment);
     const ux=reach>0?dx/reach:0,uy=reach>0?dy/reach:1;
     const ankle=[hx+ux*dist,hy+uy*dist];
     const bend=Math.sqrt(Math.max(0,segment**2-(dist/2)**2));
@@ -191,7 +191,7 @@ function draw(){
   const ghostSwing=interpolateFoot(planted,nextTarget,robot.phase);
   const ghostFeet=[[target.x*width,projectY(target.x,target.y)],
     [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-height*.052*Math.sin(robot.phase*Math.PI)]];
-  const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*47;
+  const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*43;
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
   ctx.save();
@@ -205,7 +205,7 @@ function draw(){
 }
 function settle(dt){
   const {ground}=pose();
-  const length=clamp(height/255,.78,1.12)*Math.min(1,width/475)*47;
+  const length=clamp(height/255,.78,1.12)*Math.min(1,width/475)*43;
   const rest=ground-length*(1-.15*terrainDepth(planted.x,planted.y));
   if(pelvisY===undefined)pelvisY=rest;
   const time=clamp(dt,0,.04);
