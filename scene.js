@@ -263,17 +263,9 @@ function drawQuadruped(predictive=false){
     ctx.strokeStyle=predictive?"rgba(168,221,214,.66)":lateral>0?"#c6ded8":"#759b96";
     ctx.stroke();
   }
-  const corners=[[22,-9],[22,9],[-22,9],[-22,-9]];
-  for(const lift of [0,6]){
-    ctx.beginPath();
-    corners.forEach(([long,wide],i)=>{
-      const [x,y]=projectBody(long,wide);
-      if(i)ctx.lineTo(px+x,torso+y-lift*scale);
-      else ctx.moveTo(px+x,torso+y-lift*scale);
-    });
-    ctx.closePath();
-    if(predictive)ctx.stroke();else{ctx.fillStyle=lift?"#a3cdc4":"#628f86";ctx.fill();}
-  }
+  ctx.beginPath();
+  ctx.roundRect(px-22*scale,torso-8*scale,44*scale,13*scale,4*scale);
+  if(predictive)ctx.stroke();else{ctx.fillStyle="#91bcb3";ctx.fill();}
   ctx.restore();
 }
 function drawEffortLines(a,centerY,spread){
