@@ -99,9 +99,14 @@ function requestStop(state,a){
   if(effort<.13)state.armed=true;
   if(state.armed&&effort>.32){state.armed=false;state.pending=true;}
 }
+const standingDuration=.7;
+function stopWobble(state){
+  const progress=1-state.left/standingDuration;
+  return .23*(1-progress)**2*Math.sin(progress*3*Math.PI);
+}
 function stand(state){
   state.pending=false;
-  state.left=.7;
+  state.left=standingDuration;
 }
 function advance(dt){
   const time=Math.min(dt,.05);
@@ -208,7 +213,7 @@ function body(px,hip,feet,ghost){
     limb([shoulder,elbow,wrist],near?"hsl(11 23% 36%)":"hsl(11 21% 34%)",4);
   }
   ctx.translate(px,hip);
-  ctx.rotate(ghost||humanPause.left?0:slopeTilt(angle)*.62);
+  ctx.rotate(ghost?0:humanPause.left?stopWobble(humanPause):slopeTilt(angle)*.62);
   ctx.translate(-px,-hip);
   arm(false);
   plate(px-10*s,hip-28*s,21*s,30*s,6*s,"hsl(11 23% 39%)");
@@ -275,7 +280,7 @@ function drawQuadruped(predictive=false){
     (long*forwardY+wide*rightY)*scale*.45
   ];
   const px=dog.x*width;
-  const tilt=predictive||dogPause.left?0:slopeTilt(a);
+  const tilt=predictive?0:dogPause.left?stopWobble(dogPause):slopeTilt(a);
   const legs=[];
   const step=.18, duty=.62;
   for(const [front,lateral] of [[1,-1],[-1,-1],[1,1],[-1,1]]){
