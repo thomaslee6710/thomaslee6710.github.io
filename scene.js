@@ -89,7 +89,7 @@ function advance(dt){
 }
 function swingLift(from,to,phase){
   const rise=height*drop*(terrainDepth(from.x,from.y)-terrainDepth(to.x,to.y));
-  const clearance=height*.052+clamp(rise*.65,0,height*.11);
+  const clearance=height*.040+clamp(rise*.33,0,15);
   return clearance*Math.sin(Math.PI*phase);
 }
 function swingPoint(phase){
@@ -121,7 +121,13 @@ function body(px,hip,feet,ghost){
     const ankle=[hx+ux*dist,hy+uy*dist];
     const bend=Math.sqrt(Math.max(0,segment**2-(dist/2)**2));
     const knee=[(hx+ankle[0])/2+(dir<0?-1:1)*uy*bend,(hy+ankle[1])/2-(dir<0?-1:1)*ux*bend];
-    limb([[hx,hy],knee,ankle,[ankle[0]+dir*8*s,ankle[1]+s]],i?"#f0dbba":"#83a59d",6);
+    const facing=dir<0?-1:1;
+    const thigh=clamp(Math.atan2(facing*(knee[0]-hx),knee[1]-hy),-.65,1.18);
+    const limitedKnee=[hx+facing*segment*Math.sin(thigh),hy+segment*Math.cos(thigh)];
+    const shin=Math.atan2(facing*(ankle[0]-knee[0]),ankle[1]-knee[1]);
+    const flex=clamp(thigh-shin,.16,2.15);
+    const foot=[limitedKnee[0]+facing*segment*Math.sin(thigh-flex),limitedKnee[1]+segment*Math.cos(thigh-flex)];
+    limb([[hx,hy],limitedKnee,foot,[foot[0]+dir*8*s,foot[1]+s]],i?"#f0dbba":"#83a59d",6);
   });
   function arm(near){
     const sideOfTorso=near?1:-1;
@@ -168,7 +174,7 @@ function drawSwing(from,to,progress,color){
   ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.lineCap="round";
   function point(phase){
     const p=interpolateFoot(from,to,phase);
-    return [p.x*width,projectY(p.x,p.y)-height*.052*Math.sin(Math.PI*phase)];
+    return [p.x*width,projectY(p.x,p.y)-swingLift(from,to,phase)];
   }
   let start=point(progress);
   for(let i=1;i<=20;i++){
@@ -188,35 +194,46 @@ function drawSwing(from,to,progress,color){
     ctx.restore();
   }
 }
-function drawQuadruped(){
-  const a=angle-.62;
+function drawQuadruped(predictive=false){
+  const a=angle-.62+(predictive?.18:0);
   const dog=route(a);
-  const scale=Math.min(1,width/530);
-  const dir=dog.direction<0?-1:1;
+  const scale=Math.min(1,width/530), dir=dog.direction<0?-1:1;
   const px=dog.x*width;
-  const torso=projectY(dog.x,dog.y)-27*scale;
-  ctx.save();
-  clipToTerrain(px-55*scale,px+55*scale,dog.y);
-  ctx.lineCap="round";
+  const legs=[];
+  const step=.18, duty=.62;
   for(const [front,lateral] of [[1,-1],[-1,-1],[1,1],[-1,1]]){
-    const phase=(robot.phase+(front===lateral?.5:0))%1;
-    const base=a+front*.063;
-    const from=route(base-.065),to=route(base+.065);
-    const p=interpolateFoot(from,to,phase);
-    p.y+=lateral*.018;
-    const footX=p.x*width, footY=projectY(p.x,p.y)-swingLift(from,to,phase)*.55;
-    const hipX=px+front*dir*16*scale;
-    ctx.beginPath();ctx.moveTo(hipX,torso);
-    ctx.lineTo((hipX+footX)/2-front*dir*5*scale,(torso+footY)/2);
-    ctx.lineTo(footX,footY);
-    ctx.lineWidth=3.5*scale;
-    ctx.strokeStyle=lateral>0?"#c6ded8":"#759b96";
+    const offset=front===lateral?.5:0;
+    const cycle=a/step+offset, phase=cycle-Math.floor(cycle);
+    const anchor=(Math.floor(cycle)-offset)*step+front*.063+step*duty/2;
+    const from=route(anchor),to=route(anchor+step);
+    from.y+=lateral*.025;to.y+=lateral*.025;
+    const swing=Math.max(0,(phase-duty)/(1-duty));
+    const foot=interpolateFoot(from,to,swing);
+    legs.push({front,lateral,from,to,swing,foot});
+  }
+  const support=legs.filter(leg=>!leg.swing);
+  const torso=support.reduce((sum,leg)=>sum+projectY(leg.foot.x,leg.foot.y),0)/support.length-25*scale;
+  if(!predictive)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"rgba(116,218,215,.62)");
+  ctx.save();clipToTerrain(px-65*scale,px+65*scale,dog.y);
+  ctx.lineCap="round";ctx.lineJoin="round";
+  if(predictive)ctx.setLineDash([3,4]);
+  for(const {front,lateral,from,to,swing,foot} of legs){
+    const hipX=px+front*dir*16*scale,hipY=torso+lateral*2*scale;
+    const dx=foot.x*width-hipX,dy=projectY(foot.x,foot.y)-swingLift(from,to,swing)-hipY;
+    const bearing=Math.atan2(dx,dy),segment=15*scale;
+    const reach=clamp(Math.hypot(dx,dy),segment*.45,segment*1.93);
+    const bend=Math.acos(reach/(2*segment))*front*dir;
+    const kneeX=hipX+Math.sin(bearing+bend)*segment,kneeY=hipY+Math.cos(bearing+bend)*segment;
+    ctx.beginPath();ctx.moveTo(hipX,hipY);ctx.lineTo(kneeX,kneeY);
+    ctx.lineTo(hipX+Math.sin(bearing)*reach,hipY+Math.cos(bearing)*reach);
+    ctx.lineWidth=(predictive?1.3:3.5)*scale;
+    ctx.strokeStyle=predictive?"rgba(168,221,214,.66)":lateral>0?"#c6ded8":"#759b96";
     ctx.stroke();
   }
-  ctx.fillStyle="#91bcb3";
-  ctx.beginPath();ctx.roundRect(px-22*scale,torso-8*scale,44*scale,13*scale,4*scale);ctx.fill();
-  ctx.fillStyle="#c1dcd5";
-  ctx.beginPath();ctx.roundRect(px+(dir>0?19:-29)*scale,torso-11*scale,10*scale,10*scale,3*scale);ctx.fill();
+  ctx.beginPath();ctx.roundRect(px-22*scale,torso-8*scale,44*scale,13*scale,4*scale);
+  if(predictive)ctx.stroke();else{ctx.fillStyle="#91bcb3";ctx.fill();}
+  ctx.beginPath();ctx.roundRect(px+(dir>0?19:-29)*scale,torso-11*scale,10*scale,10*scale,3*scale);
+  if(predictive)ctx.stroke();else{ctx.fillStyle="#c1dcd5";ctx.fill();}
   ctx.restore();
 }
 function draw(){
@@ -236,6 +253,7 @@ function draw(){
   drawSwing(planted,nextTarget,0,"rgba(240,196,103,.62)");
   drawSwing(trailing,target,robot.phase,"#ffda83");
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
+  drawQuadruped(true);
   drawQuadruped();
   visibleBody(robot.x,robot.y,hip,feet,false);
   ctx.restore();
