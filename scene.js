@@ -8,7 +8,7 @@ const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const patch = {x:.51, y:.72, depth:.46};
 const resolution=80;
 let edited=false, elapsed=0;
-const humanPause={armed:true,left:0}, dogPause={armed:true,left:0};
+const humanPause={armed:true,pending:false,left:0}, dogPause={armed:true,pending:false,left:0};
 const brush={x:patch.x,y:patch.y};
 let dragY=0,dirty=false,headroom=0;
 const drop = .34;
@@ -85,26 +85,40 @@ function obstacleEffort(a){
   const dx=(p.x-patch.x)/.135,dy=(p.y-patch.y)/.25;
   return clamp(Math.abs(patch.depth)*2.4,0,1)*Math.exp(-.65*(dx*dx+dy*dy));
 }
-function walkingTime(state,a,dt){
-  const effort=obstacleEffort(a);
+function requestStop(state,a){
+  const effort=obstacleEffort(a+.12);
   if(effort<.13)state.armed=true;
-  if(state.armed&&effort>.32){state.armed=false;state.left=.38;}
-  const paused=Math.min(dt,state.left);
-  state.left-=paused;
-  return dt-paused;
+  if(state.armed&&effort>.32){state.armed=false;state.pending=true;}
+}
+function stand(state){
+  state.pending=false;
+  state.left=.7;
 }
 function advance(dt){
   const time=Math.min(dt,.05);
   elapsed+=time;
-  const amount=walkingTime(humanPause,angle,time)/.9;
+  requestStop(humanPause,angle);
+  requestStop(dogPause,dogAngle);
+  let amount=0;
+  if(humanPause.left>0)humanPause.left=Math.max(0,humanPause.left-time);
+  else if(humanPause.pending&&robot.phase===0)stand(humanPause);
+  else amount=humanPause.pending?Math.min(time/.9,1-robot.phase):time/.9;
   const angularSpeed=angleStep(terrainDepth(robot.x,robot.y));
   angle+=amount*angularSpeed;
   const correction=clamp((angle-dogAngle-followingGap)*2,-.2,.2);
-  dogAngle=Math.min(angle-.68,dogAngle+walkingTime(dogPause,dogAngle,time)/.9*Math.max(0,angularSpeed+correction));
+  if(dogPause.left>0)dogPause.left=Math.max(0,dogPause.left-time);
+  else{
+    const next=Math.max(dogAngle,Math.min(angle-.68,dogAngle+time/.9*Math.max(0,angularSpeed+correction)));
+    // Both diagonal pairs are in stance just after each half-cycle boundary.
+    const stance=Math.ceil((dogAngle-.00001)/.09)*.09+.00001;
+    if(dogPause.pending&&stance<=next){dogAngle=stance;stand(dogPause);}
+    else dogAngle=next;
+  }
   Object.assign(robot,route(angle));
   robot.phase+=amount;
   if(robot.phase>=1){
     robot.phase-=1;
+    if(humanPause.pending){robot.phase=0;stand(humanPause);}
     trailing=planted;planted=target;target=nextTarget;side*=-1;
     robot.observed=terrainDepth(planted.x,planted.y);
     predict();
@@ -154,7 +168,7 @@ function body(px,hip,feet,ghost){
   });
   function arm(near){
     const sideOfTorso=near?1:-1;
-    const cycle=(ghost?-side:side)*Math.cos(robot.phase*Math.PI)*sideOfTorso;
+    const cycle=(!ghost&&humanPause.left>0?0:ghost?-side:side)*Math.cos(robot.phase*Math.PI)*sideOfTorso;
     const facing=dir<0?-1:1;
     const shoulder=[px+sideOfTorso*6*s,hip-22*s];
     const upper=cycle*.56;
@@ -318,9 +332,9 @@ function draw(){
   drawQuadruped(true);
   drawQuadruped();
   const dog=route(dogAngle);
-  drawEffortLines(dogAngle,projectY(dog.x,dog.y)-30,28);
+  if(!dogPause.left)drawEffortLines(dogAngle,projectY(dog.x,dog.y)-30,28);
   visibleBody(robot.x,robot.y,hip,feet,false);
-  drawEffortLines(angle,hip-22,18);
+  if(!humanPause.left)drawEffortLines(angle,hip-22,18);
   ctx.restore();
 }
 function settle(dt){
