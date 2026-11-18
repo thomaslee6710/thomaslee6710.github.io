@@ -7,7 +7,8 @@ const mesh = grid.getContext("2d");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const patch = {x:.51, y:.72, depth:.46};
 const resolution=80;
-let edited=false, elapsed=0, humanoidEffort=0, dogEffort=0;
+let edited=false, elapsed=0;
+const humanPause={armed:true,left:0}, dogPause={armed:true,left:0};
 const brush={x:patch.x,y:patch.y};
 let dragY=0,dirty=false,headroom=0;
 const drop = .34;
@@ -84,18 +85,22 @@ function obstacleEffort(a){
   const dx=(p.x-patch.x)/.135,dy=(p.y-patch.y)/.25;
   return clamp(Math.abs(patch.depth)*2.4,0,1)*Math.exp(-.65*(dx*dx+dy*dy));
 }
+function walkingTime(state,a,dt){
+  const effort=obstacleEffort(a);
+  if(effort<.13)state.armed=true;
+  if(state.armed&&effort>.32){state.armed=false;state.left=.38;}
+  const paused=Math.min(dt,state.left);
+  state.left-=paused;
+  return dt-paused;
+}
 function advance(dt){
   const time=Math.min(dt,.05);
   elapsed+=time;
-  const blend=1-Math.exp(-time*11);
-  humanoidEffort+=(obstacleEffort(angle)-humanoidEffort)*blend;
-  dogEffort+=(obstacleEffort(dogAngle)-dogEffort)*blend;
-  const hesitation=.62+.28*Math.sin(elapsed*12);
-  const amount=time/.9*(1-humanoidEffort*hesitation);
+  const amount=walkingTime(humanPause,angle,time)/.9;
   const angularSpeed=angleStep(terrainDepth(robot.x,robot.y));
   angle+=amount*angularSpeed;
   const correction=clamp((angle-dogAngle-followingGap)*2,-.2,.2);
-  dogAngle=Math.min(angle-.68,dogAngle+time/.9*(angularSpeed+correction)*(1-dogEffort*hesitation));
+  dogAngle=Math.min(angle-.68,dogAngle+walkingTime(dogPause,dogAngle,time)/.9*Math.max(0,angularSpeed+correction));
   Object.assign(robot,route(angle));
   robot.phase+=amount;
   if(robot.phase>=1){
@@ -230,7 +235,7 @@ function drawQuadruped(predictive=false){
     legs.push({front,lateral,from,to,swing,foot});
   }
   const support=legs.filter(leg=>!leg.swing);
-  const torso=support.reduce((sum,leg)=>sum+projectY(leg.foot.x,leg.foot.y),0)/support.length-25*scale+(predictive?0:dogEffort*Math.sin(elapsed*16)*4*scale);
+  const torso=support.reduce((sum,leg)=>sum+projectY(leg.foot.x,leg.foot.y),0)/support.length-25*scale;
   if(!predictive)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"rgba(116,218,215,.62)");
   ctx.save();clipToTerrain(px-65*scale,px+65*scale,dog.y);
   ctx.lineCap="round";ctx.lineJoin="round";
@@ -252,6 +257,25 @@ function drawQuadruped(predictive=false){
   if(predictive)ctx.stroke();else{ctx.fillStyle="#91bcb3";ctx.fill();}
   ctx.restore();
 }
+function drawEffortLines(a,centerY,spread){
+  const p=route(a),ahead=route(a+.09);
+  const rise=terrainDepth(p.x,p.y)-terrainDepth(ahead.x,ahead.y);
+  if(obstacleEffort(a)<.16||rise<.018)return;
+  const pulse=.45+.28*Math.sin(elapsed*20);
+  ctx.save();
+  clipToTerrain(p.x*width-spread-15,p.x*width+spread+15,p.y);
+  ctx.strokeStyle="rgba(249,221,161,"+pulse+")";
+  ctx.lineWidth=1.5;ctx.lineCap="round";
+  for(const side of [-1,1]){
+    const x=p.x*width+side*spread;
+    for(let i=0;i<2;i++){
+      const y=centerY+i*7;
+      ctx.beginPath();ctx.moveTo(x,y);
+      ctx.lineTo(x+side*(6+2*Math.sin(elapsed*20+i)),y-2+i*3);ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
 function draw(){
   ctx.clearRect(0,-headroom,width,height+headroom);
   ctx.drawImage(grid,0,-headroom,width,height+headroom);
@@ -262,7 +286,7 @@ function draw(){
     [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-swingLift(planted,nextTarget,robot.phase)]];
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*43;
   const {ground,feet}=pose();
-  const hip=(pelvisY??ground-legLength)+humanoidEffort*Math.sin(elapsed*14)*5;
+  const hip=pelvisY??ground-legLength;
   ctx.save();
   // Render only the remaining swing, from the lifted foot to touchdown.
   // The stance leg's next swing starts after the current leg touches down.
@@ -271,7 +295,10 @@ function draw(){
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   drawQuadruped(true);
   drawQuadruped();
-  visibleBody(robot.x+humanoidEffort*Math.sin(elapsed*11)*4/width,robot.y,hip,feet,false);
+  const dog=route(dogAngle);
+  drawEffortLines(dogAngle,projectY(dog.x,dog.y)-30,28);
+  visibleBody(robot.x,robot.y,hip,feet,false);
+  drawEffortLines(angle,hip-22,18);
   ctx.restore();
 }
 function settle(dt){
