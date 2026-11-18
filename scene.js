@@ -109,13 +109,20 @@ function body(px,hip,feet,ghost){
   }
   ctx.restore();
 }
+let cameraOffset=0;
 function draw(){
-  ctx.clearRect(0,0,width,height);ctx.drawImage(grid,0,0,width,height);
+  ctx.clearRect(0,0,width,height);
   const fy=height*(.14+.72*forecast.y+drop*forecast.depth),fx=forecast.x*width;
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*47;
-  body(fx,fy-legLength,[[fx-7,fy],[fx+8,fy]],true);
   const {ground,feet}=pose();
-  body(robot.x*width,pelvisY??ground-legLength,feet,false);
+  const hip=pelvisY??ground-legLength;
+  const headTop=Math.min(hip,fy-legLength)-legLength*46/47;
+  cameraOffset=Math.max(0,16-headTop);
+  ctx.save();ctx.translate(0,cameraOffset);
+  ctx.drawImage(grid,0,0,width,height);
+  body(fx,fy-legLength,[[fx-7,fy],[fx+8,fy]],true);
+  body(robot.x*width,hip,feet,false);
+  ctx.restore();
 }
 function settle(dt){
   const {ground}=pose();
@@ -150,7 +157,7 @@ canvas.onpointerdown=e=>{
   const box=canvas.getBoundingClientRect();
   pointer=e.pointerId;canvas.setPointerCapture(pointer);
   patch.x=clamp((e.clientX-box.left)/width,0,1);
-  patch.y=clamp(((e.clientY-box.top)/height-.14-drop*patch.depth)/.72,0,1);
+  patch.y=clamp(((e.clientY-box.top-cameraOffset)/height-.14-drop*patch.depth)/.72,0,1);
   dragY=e.clientY;dirty=true;
 };
 canvas.onpointermove=e=>{
