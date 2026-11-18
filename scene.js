@@ -4,10 +4,11 @@ const statusLine = document.querySelector(".status");
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const height = (x,y) => .38*Math.sin(2*x+y)+.19*Math.cos(x-3*y);
 const sample = (x,y) => ({x,y,z:height(x,y)});
-let contacts = [sample(-.65,.24),sample(-.24,.05),sample(.13,.19)];
-let aim = {...contacts[2]}, legHeight = aim.z;
-let yaw = -.32, pitch = .58, zoom = 1, width, viewHeight, unit;
-let gesture, frame;
+const legs = [[.55,-.28],[.55,.28],[-.55,-.28],[-.55,.28]].map(([x,y])=>({x,y,foot:sample(x,y)}));
+let contacts = legs.map(leg=>leg.foot).slice(-3);
+let active=0, prediction=estimate(legs[0].x,legs[0].y);
+let width,viewHeight,unit,drag,frame;
+const yaw=-.48,pitch=.45,zoom=1;
 function estimate(x,y) {
   let sum=0, weight=.07;
   for(const p of contacts){
@@ -43,79 +44,81 @@ function draw(){
       line(points,axis?"#376d62":"#70a992",1);
     }
   }
-  for(const p of contacts) dot(project(p.x,p.y,p.z),5,"#ffca77");
-  const {x,y}=aim;
-  const pad=project(x,y,legHeight);
-  const leg=[project(x+.22,y,legHeight+.73),project(x-.08,y,legHeight+.63),project(x+.15,y,legHeight+.36),pad];
-  ctx.lineCap="round";ctx.lineJoin="round";
-  line(leg,"#0c2225",13);line(leg,"#eee7d2",7);
-  leg.slice(1,3).forEach(p=>{dot(p,8,"#68867e");dot(p,3,"#f4eacb");});
-  dot(pad,7,"#ffca77");
+  const legOrder=[0,2,1,3].filter(i=>i!==active);
+  function drawLeg(i){
+    const leg=legs[i], f=leg.foot;
+    const hip=project(leg.x,leg.y,.77), pad=project(f.x,f.y,f.z);
+    const knee=project((leg.x+f.x)/2-.19, (leg.y+f.y)/2, (.77+f.z)/2+.09);
+    const selected=i===active;
+    line([hip,knee,pad],"#102829",selected?13:10);
+    line([hip,knee,pad],selected?"#fff0cb":"#829b97",selected?8:6);
+    dot(knee,5,"#4a6567");dot(pad,selected?7:4,selected?"#ffc16b":"#abc2b8");
+  }
+  legOrder.forEach(drawLeg);
+  const corners=[[-.68,-.32],[.62,-.32],[.72,.08],[.61,.32],[-.68,.32]];
+  function face(points,color){
+    ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
+    ctx.closePath();ctx.fillStyle=color;ctx.fill();
+  }
+  face(corners.map(([x,y])=>project(x,y,.84)),"#c4d4ce");
+  face([project(-.68,.32,.84),project(.61,.32,.84),project(.61,.32,.69),project(-.68,.32,.69)],"#789692");
+  dot(project(.63,.15,.80),4,"#213d41");
+  const foot=legs[active].foot;
+  const ring=project(foot.x,foot.y,prediction);
+  ctx.beginPath();ctx.setLineDash([4,3]);ctx.ellipse(...ring,16,7,0,0,2*Math.PI);
+  ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.stroke();ctx.setLineDash([]);
+  drawLeg(active);
 }
 function resize(){
   const box=canvas.getBoundingClientRect(), ratio=Math.min(devicePixelRatio,2);
   width=box.width;viewHeight=box.height;canvas.width=width*ratio;canvas.height=viewHeight*ratio;
   ctx.setTransform(ratio,0,0,ratio,0,0);draw();
 }
-function step(x,y){
+function aim(x,y){
   cancelAnimationFrame(frame);
-  const p=sample(x,y), prediction=estimate(x,y);
-  aim=p;const start=performance.now();
-  const duration=matchMedia("(prefers-reduced-motion: reduce)").matches?0:330;
-  function lower(now){
-    const t=duration?clamp((now-start)/duration,0,1):1;
-    legHeight=p.z+.45*(1-t);
-    if(t<1) frame=requestAnimationFrame(lower);
-    else {
+  const leg=legs[active];
+  x=clamp(x,leg.x-.68,leg.x+.68);y=clamp(y,leg.y-.50,leg.y+.50);
+  prediction=estimate(x,y);
+  leg.foot={x,y,z:prediction+.22};
+  draw();
+}
+function land(){
+  cancelAnimationFrame(frame);
+  const leg=legs[active],from=leg.foot,p=sample(from.x,from.y);
+  const start=performance.now(), delta=p.z-prediction;
+  function animate(now){
+    const t=matchMedia("(prefers-reduced-motion: reduce)").matches?1:clamp((now-start)/250,0,1);
+    leg.foot={...p,z:from.z+(p.z-from.z)*t};
+    if(t<1)frame=requestAnimationFrame(animate);
+    else{
       contacts=[...contacts.slice(-2),p];
-      const diff=p.z-prediction;
-      statusLine.textContent=Math.abs(diff)<.035?"Contact matched the estimate.":diff>0?"The foot met higher ground. The mesh rose around it.":"The foot landed lower. The mesh dipped around it.";
+      statusLine.textContent=(Math.abs(delta)<.035?"Contact matched the prediction.":delta>0?"The foot touched higher than predicted.":"The foot touched lower than predicted.")+" The mesh now includes this step.";
     }
     draw();
   }
-  lower(start);
+  animate(start);
 }
-function pick(px,py){
-  let best, distance=Infinity;
-  for(let i=0;i<=80;i++) for(let j=0;j<=50;j++){
-    const x=-1.6+i*.04,y=-1+j*.04;
-    const [sx,sy]=project(x,y,estimate(x,y));
-    const d=(px-sx)**2+(py-sy)**2;
-    if(d<distance){distance=d;best={x,y};}
-  }
-  if(distance<28**2) step(best.x,best.y);
-}
+const selector=document.querySelector("#leg");
+selector.onchange=()=>{cancelAnimationFrame(frame);legs[active].foot=sample(legs[active].foot.x,legs[active].foot.y);active=selector.selectedIndex;prediction=estimate(legs[active].foot.x,legs[active].foot.y);draw();};
 canvas.onpointerdown=e=>{
-  if(!e.isPrimary) return;
-  canvas.setPointerCapture(e.pointerId);
-  gesture={x:e.clientX,y:e.clientY,yaw,pitch,drag:false};
+  if(!e.isPrimary)return;
+  const b=canvas.getBoundingClientRect();
+  const hits=legs.map(({foot:f},i)=>{const [x,y]=project(f.x,f.y,f.z);return {i,d:Math.hypot(x-e.clientX+b.left,y-e.clientY+b.top)};}).sort((a,b)=>a.d-b.d);
+  if(hits[0].d<24){selector.selectedIndex=hits[0].i;selector.onchange();}
+  const f=legs[active].foot;
+  drag={sx:e.clientX,sy:e.clientY,x:f.x,y:f.y};canvas.setPointerCapture(e.pointerId);aim(f.x,f.y);
 };
 canvas.onpointermove=e=>{
-  if(!gesture||!e.isPrimary)return;
-  const dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;
-  if(Math.hypot(dx,dy)>4)gesture.drag=true;
-  if(gesture.drag){yaw=gesture.yaw+dx*.008;pitch=clamp(gesture.pitch+dy*.006,.18,1.42);draw();}
+  if(!drag||!e.isPrimary)return;
+  const u=(e.clientX-drag.sx)/unit,v=(e.clientY-drag.sy)/(unit*Math.sin(pitch));
+  aim(drag.x+u*Math.cos(yaw)+v*Math.sin(yaw),drag.y-u*Math.sin(yaw)+v*Math.cos(yaw));
 };
-canvas.onpointerup=e=>{
-  if(!gesture||!e.isPrimary)return;
-  if(!gesture.drag){const b=canvas.getBoundingClientRect();pick(e.clientX-b.left,e.clientY-b.top);}
-  gesture=null;
-};
-canvas.onpointercancel=()=>{gesture=null;};
-function magnify(factor){zoom=clamp(zoom*factor,.65,2.3);draw();}
-canvas.addEventListener("wheel",e=>{e.preventDefault();magnify(Math.exp(-e.deltaY*.0015));},{passive:false});
-document.querySelector("#in").onclick=()=>magnify(1.2);
-document.querySelector("#out").onclick=()=>magnify(1/1.2);
-document.querySelector("#reset").onclick=()=>{yaw=-.32;pitch=.58;zoom=1;draw();};
+canvas.onpointerup=e=>{if(drag&&e.isPrimary){drag=null;land();}};
+canvas.onpointercancel=()=>{if(drag){drag=null;land();}};
 canvas.onkeydown=e=>{
-  if(e.key==="Enter"){step(aim.x,aim.y);return;}
+  const f=legs[active].foot;
+  if(e.key==="Enter"){land();return;}
   if(!e.key.startsWith("Arrow"))return;
-  e.preventDefault();
-  const dx=Number(e.key==="ArrowRight")-Number(e.key==="ArrowLeft");
-  const dy=Number(e.key==="ArrowDown")-Number(e.key==="ArrowUp");
-  if(e.shiftKey){yaw+=dx*.14;pitch=clamp(pitch+dy*.1,.18,1.42);}
-  else{cancelAnimationFrame(frame);aim={x:clamp(aim.x+dx*.12,-1.6,1.6),y:clamp(aim.y+dy*.12,-1,1)};legHeight=estimate(aim.x,aim.y)+.15;}
-  draw();
+  e.preventDefault();aim(f.x+.09*((e.key==="ArrowRight")-(e.key==="ArrowLeft")),f.y+.09*((e.key==="ArrowDown")-(e.key==="ArrowUp")));
 };
-new ResizeObserver(resize).observe(canvas);
-resize();
+new ResizeObserver(resize).observe(canvas);resize();
