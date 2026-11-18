@@ -26,9 +26,12 @@ function route(a){
 const robot={...route(angle),phase:0,observed:0};
 let planted=route(angle), trailing=route(angle-.11);
 let width, height, ratio, stride, forecast, pointer=null, previous;
+function sculptedDepth(x,y){
+  return patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
+}
 function terrainDepth(x,y){
   const hills=.32*Math.sin(2*Math.PI*(x+.23*y))+.18*Math.cos(2*Math.PI*(y-.52*x));
-  return hills+patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
+  return hills+sculptedDepth(x,y);
 }
 function projectY(x,y){return height*(.14+.72*y+drop*terrainDepth(x,y));}
 function updateGrid(){
@@ -56,7 +59,10 @@ function updateGrid(){
       const light=clamp(24-14*depth+10*slope,8,39);
       const points=[vertex(i,j),vertex(i+1,j),vertex(i+1,j+1),vertex(i,j+1)];
       mesh.beginPath();points.forEach(([px,py],k)=>k?mesh.lineTo(px,py):mesh.moveTo(px,py));
-      mesh.closePath();mesh.fillStyle="hsl(160 20% "+(61+light*.76)+"%)";mesh.fill();
+      const sculpt=clamp(Math.abs(sculptedDepth(x,y))*2,0,1);
+      mesh.closePath();
+      mesh.fillStyle="hsl("+(160-22*sculpt)+" "+(20+19*sculpt)+"% "+(61+light*.76-23*sculpt)+"%)";
+      mesh.fill();
       mesh.strokeStyle="hsla(159,25%,"+(40+8*slope)+"%,.33)";mesh.lineWidth=.7;mesh.stroke();
     }
   }
