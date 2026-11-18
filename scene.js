@@ -9,7 +9,7 @@ const patch = {x:.51, y:.72, depth:.46};
 const resolution=80;
 let edited=false, elapsed=0;
 let humanStance=0,dogStance=0;
-const humanPause={armed:true,pending:false,left:0}, dogPause={armed:true,pending:false,left:0};
+const humanPause={armed:true,pending:false,left:0,speed:null}, dogPause={armed:true,pending:false,left:0,speed:null};
 const brush={x:patch.x,y:patch.y};
 let dragY=0,dirty=false,headroom=0;
 const drop = .34;
@@ -107,22 +107,36 @@ function stopWobble(state){
 function stand(state){
   state.pending=false;
   state.left=standingDuration;
+  state.speed=0;
+}
+function smoothSpeed(state,target,time){
+  const speed=state.speed??target;
+  // Ramp up over several frames while allowing quicker braking.
+  const rate=target>speed?2.2:7;
+  state.speed=speed+(target-speed)*(1-Math.exp(-rate*time));
+  return state.speed;
 }
 function advance(dt){
   const time=Math.min(dt,.05);
   elapsed+=time;
   requestStop(humanPause,angle);
   requestStop(dogPause,dogAngle);
+  const angularSpeed=angleStep(terrainDepth(robot.x,robot.y));
   let amount=0;
   if(humanPause.left>0)humanPause.left=Math.max(0,humanPause.left-time);
   else if(humanPause.pending&&robot.phase===0)stand(humanPause);
-  else amount=humanPause.pending?Math.min(time/.9,1-robot.phase):time/.9;
-  const angularSpeed=angleStep(terrainDepth(robot.x,robot.y));
+  else{
+    amount=time/.9*smoothSpeed(humanPause,angularSpeed,time)/angularSpeed;
+    if(humanPause.pending)amount=Math.min(amount,1-robot.phase);
+  }
   angle+=amount*angularSpeed;
   const correction=clamp((angle-dogAngle-followingGap)*2,-.2,.2);
   if(dogPause.left>0)dogPause.left=Math.max(0,dogPause.left-time);
   else{
-    const next=Math.max(dogAngle,Math.min(angle-.68,dogAngle+time/.9*Math.max(0,angularSpeed+correction)));
+    const available=Math.max(0,angle-.68-dogAngle);
+    const desired=Math.min(Math.max(0,angularSpeed+correction),available*.9/Math.max(time,.001));
+    const speed=smoothSpeed(dogPause,desired,time);
+    const next=dogAngle+Math.min(available,time/.9*speed);
     // Both diagonal pairs are in stance just after each half-cycle boundary.
     const stance=Math.ceil((dogAngle-.00001)/.09)*.09+.00001;
     if(dogPause.pending&&stance<=next){dogAngle=stance;stand(dogPause);}
