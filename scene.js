@@ -34,12 +34,12 @@ function draw(){
     return [u*width,groundY(v)+height*depth*patch];
   }
   const cols=Math.ceil(width/20);
-  for(let j=0;j<=24;j++){
+  for(let j=-9;j<=33;j++){
     const v=j/24;
     stroke(Array.from({length:cols*2+5},(_,i)=>point((i-2)/(cols*2),v)),"#6b9e8a",1);
   }
   for(let i=-4;i<=cols+4;i++){
-    stroke(Array.from({length:29},(_,j)=>{const v=j/28;return point(i/cols+.07*(v-.5),v);}),"#427466",1);
+    stroke(Array.from({length:47},(_,j)=>{const v=(j-9)/28;return point(i/cols+.07*(v-.5),v);}),"#427466",1);
   }
   const stride=Math.min(.29,Math.max(.13,108/width));
   const nextX=x+stride<=.98?x+stride:x-stride;
@@ -49,7 +49,7 @@ function draw(){
   function label(text,px,py,color){
     const w=ctx.measureText(text).width;
     const left=clamp(px-w/2,4,width-w-4),top=clamp(py,22,height-22);
-    ctx.fillStyle="#102d30";ctx.fillRect(left-3,top-9,w+6,18);
+    ctx.strokeStyle="#102d30";ctx.lineWidth=3;ctx.strokeText(text,left,top);
     ctx.fillStyle=color;ctx.fillText(text,left,top);
   }
   label("Current step",x*width,currentY+16,"#ffcb85");

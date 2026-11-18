@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Thomas Chun Fai Lee studies world models and control at Carnegie Mellon University."><title>Thomas Chun Fai Lee</title><link rel="stylesheet" href="style.css?v=foot3"><script src="scene.js?v=free-step" defer></script><style>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Thomas Chun Fai Lee studies world models and control at Carnegie Mellon University."><title>Thomas Chun Fai Lee</title><link rel="stylesheet" href="style.css?v=foot3"><script src="scene.js?v=soft-edge" defer></script><style>
 .profile-text{container-type:inline-size}
 .profile h1{font-size:clamp(20px,8.6cqw,62px);white-space:nowrap;line-height:1.15}
 .home{background:#102d30;color:#f7f5e7}
@@ -14,13 +14,13 @@
 .terrain-copy{padding:8px 5vw 0;background:linear-gradient(#102d30 4%,#102d30e6 65%,transparent)}
 .terrain-copy select,.terrain-copy label{pointer-events:auto;width:fit-content}
 .terrain-controls{padding:4px 5vw 12px}
-.terrain canvas:focus-visible{outline-offset:-3px}
+.terrain canvas:focus-visible{outline:none}.terrain:has(canvas:focus-visible) #demo-title{text-decoration:underline;text-underline-offset:.15em}
 @media(pointer:coarse){.terrain canvas{touch-action:none}.terrain-copy,.terrain-controls{pointer-events:auto;touch-action:pan-y}}
 
 .home{position:relative;isolation:isolate;min-height:100vh}
 .mesh-strip{position:relative;isolation:isolate}
 #page-mesh{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;mask-image:linear-gradient(to bottom,transparent,#000 20%,#000 80%,transparent)}
-.mesh-strip{height:clamp(185px,25svh,255px)}
+.mesh-strip{height:clamp(215px,29svh,295px)}
 #page-mesh{pointer-events:auto;z-index:0;cursor:grab;touch-action:none}
 .terrain-copy,.terrain-controls{background:transparent}
 </style></head>
