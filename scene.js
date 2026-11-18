@@ -8,6 +8,7 @@ const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const patch = {x:.51, y:.72, depth:.46};
 const resolution=80;
 let edited=false, elapsed=0;
+let humanStance=0,dogStance=0;
 const humanPause={armed:true,pending:false,left:0}, dogPause={armed:true,pending:false,left:0};
 const brush={x:patch.x,y:patch.y};
 let dragY=0,dirty=false,headroom=0;
@@ -123,6 +124,9 @@ function advance(dt){
     robot.observed=terrainDepth(planted.x,planted.y);
     predict();
   }
+  const blend=Math.min(1,time*7);
+  humanStance=clamp(humanStance+(humanPause.left?blend:-blend),0,1);
+  dogStance=clamp(dogStance+(dogPause.left?blend:-blend),0,1);
 }
 function swingLift(from,to,phase){
   const rise=height*drop*(terrainDepth(from.x,from.y)-terrainDepth(to.x,to.y));
@@ -135,7 +139,15 @@ function swingPoint(phase){
 }
 function pose(){
   const ground=projectY(planted.x,planted.y);
-  return {ground,feet:[[planted.x*width,ground],swingPoint(robot.phase)]};
+  const feet=[[planted.x*width,ground],swingPoint(robot.phase)];
+  const standingGround=projectY(robot.x,robot.y);
+  const stanceWidth=5*Math.min(1,width/475);
+  for(let i=0;i<feet.length;i++){
+    feet[i][0]+=humanStance*(robot.x*width+(i?stanceWidth:-stanceWidth)-feet[i][0]);
+    const footGround=projectY(feet[i][0]/width,robot.y);
+    feet[i][1]+=humanStance*(footGround-feet[i][1]);
+  }
+  return {ground:ground+(standingGround-ground)*humanStance,feet};
 }
 function body(px,hip,feet,ghost){
   const s=clamp(height/255,.78,1.12)*Math.min(1,width/475),dir=ghost?forecast.direction:robot.direction;
@@ -143,7 +155,7 @@ function body(px,hip,feet,ghost){
   if(ghost)ctx.setLineDash([4,4]);
   function limb(points,ink,weight){
     ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
-    ctx.strokeStyle=ghost?"rgba(125,91,37,.78)":ink;ctx.lineWidth=ghost?1.4:weight*s;ctx.stroke();
+    ctx.strokeStyle=ghost?"rgba(161,63,113,.78)":ink;ctx.lineWidth=ghost?1.4:weight*s;ctx.stroke();
   }
   function plate(x,y,w,h,r,color){
     ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(ghost)ctx.stroke();else{ctx.fillStyle=color;ctx.fill();}
@@ -164,7 +176,7 @@ function body(px,hip,feet,ghost){
     const shin=Math.atan2(facing*(ankle[0]-knee[0]),ankle[1]-knee[1]);
     const flex=clamp(thigh-shin,.16,2.15);
     const foot=[limitedKnee[0]+facing*segment*Math.sin(thigh-flex),limitedKnee[1]+segment*Math.cos(thigh-flex)];
-    limb([[hx,hy],limitedKnee,foot,[foot[0]+dir*8*s,foot[1]+s]],i?"#695629":"#625d49",6);
+    limb([[hx,hy],limitedKnee,foot,[foot[0]+dir*8*s,foot[1]+s]],i?"#b64465":"#794b88",6);
   });
   function arm(near){
     const sideOfTorso=near?1:-1;
@@ -175,11 +187,11 @@ function body(px,hip,feet,ghost){
     const forearm=upper+.32+.44*Math.max(0,cycle);
     const elbow=[shoulder[0]+facing*Math.sin(upper)*13*s,shoulder[1]+Math.cos(upper)*13*s];
     const wrist=[elbow[0]+facing*Math.sin(forearm)*11*s,elbow[1]+Math.cos(forearm)*11*s];
-    limb([shoulder,elbow,wrist],near?"#966625":"#766a50",4);
+    limb([shoulder,elbow,wrist],near?"#d74d72":"#8058a2",4);
   }
   arm(false);
-  plate(px-10*s,hip-28*s,21*s,30*s,6*s,"#ad874c");
-  plate(px-7*s,hip-46*s,16*s,16*s,5*s,"#c7a46a");
+  plate(px-10*s,hip-28*s,21*s,30*s,6*s,"#ef7490");
+  plate(px-7*s,hip-46*s,16*s,16*s,5*s,"#ffad9e");
   if(!ghost)plate(px+(-3+3*dir)*s,hip-42*s,8*s,4*s,1,"#2b392e");
   arm(true);
   ctx.restore();
@@ -255,18 +267,22 @@ function drawQuadruped(predictive=false){
     }
     const swing=Math.max(0,(phase-duty)/(1-duty));
     const foot=interpolateFoot(from,to,swing);
-    legs.push({front,lateral,from,to,swing,foot});
+    const standing=predictive?0:dogStance;
+    const [standX,standY]=projectBody(front*15,lateral*7);
+    foot.x+=standing*(dog.x+standX/width-foot.x);
+    foot.y+=standing*(dog.y+standY/(.72*height)-foot.y);
+    legs.push({front,lateral,from,to,swing,foot,standing});
   }
   const support=legs.filter(leg=>!leg.swing);
   const torso=support.reduce((sum,leg)=>sum+projectY(leg.foot.x,leg.foot.y),0)/support.length-25*scale;
-  if(!predictive)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"rgba(24,120,145,.68)");
+  if(!predictive&&!dogPause.left)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"rgba(24,120,145,.68)");
   ctx.save();clipToTerrain(px-65*scale,px+65*scale,dog.y);
   ctx.lineCap="round";ctx.lineJoin="round";
   if(predictive)ctx.setLineDash([3,4]);
-  for(const {front,lateral,from,to,swing,foot} of legs){
+  for(const {front,lateral,from,to,swing,foot,standing} of legs){
     const [hipOffsetX,hipOffsetY]=projectBody(front*16,lateral*7);
     const hipX=px+hipOffsetX,hipY=torso+hipOffsetY;
-    const dx=foot.x*width-hipX,dy=projectY(foot.x,foot.y)-swingLift(from,to,swing)-hipY;
+    const dx=foot.x*width-hipX,dy=projectY(foot.x,foot.y)-swingLift(from,to,swing)*(1-standing)-hipY;
     const bearing=Math.atan2(dx,dy),segment=15*scale;
     const reach=clamp(Math.hypot(dx,dy),segment*.45,segment*1.93);
     const bend=-Math.acos(reach/(2*segment))*forwardX;
@@ -274,15 +290,15 @@ function drawQuadruped(predictive=false){
     ctx.beginPath();ctx.moveTo(hipX,hipY);ctx.lineTo(kneeX,kneeY);
     ctx.lineTo(hipX+Math.sin(bearing)*reach,hipY+Math.cos(bearing)*reach);
     ctx.lineWidth=(predictive?1.3:3.5)*scale;
-    ctx.strokeStyle=predictive?"rgba(38,99,135,.8)":lateral>0?"#275978":"#4c7289";
+    ctx.strokeStyle=predictive?"rgba(38,99,135,.8)":lateral>0?"#395fa8":"#7668bb";
     ctx.stroke();
   }
   ctx.beginPath();
   ctx.roundRect(px-22*scale,torso-8*scale,44*scale,13*scale,4*scale);
-  if(predictive)ctx.stroke();else{ctx.fillStyle="#347b9c";ctx.fill();}
+  if(predictive)ctx.stroke();else{ctx.fillStyle="#5984d6";ctx.fill();}
   ctx.restore();
 }
-function drawEffortLines(a,centerY,spread,color="#a2621e"){
+function drawEffortLines(a,centerY,spread,color="#bc4b77"){
   const p=route(a),ahead=route(a+.09);
   const rise=terrainDepth(p.x,p.y)-terrainDepth(ahead.x,ahead.y);
   if(obstacleEffort(a)<.16||Math.abs(rise)<.018)return;
@@ -326,8 +342,8 @@ function draw(){
   ctx.save();
   // Render only the remaining swing, from the lifted foot to touchdown.
   // The stance leg's next swing starts after the current leg touches down.
-  drawSwing(planted,nextTarget,0,"rgba(159,102,36,.62)");
-  drawSwing(trailing,target,robot.phase,"#a2621e");
+  drawSwing(planted,nextTarget,0,"rgba(188,75,119,.62)");
+  drawSwing(trailing,target,robot.phase,"#bc4b77");
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   drawQuadruped(true);
   drawQuadruped();
