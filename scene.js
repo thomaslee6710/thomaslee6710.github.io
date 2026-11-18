@@ -1,4 +1,6 @@
-const canvas = document.querySelector("canvas");
+const canvas = document.querySelector("#page-mesh");
+const control = document.querySelector("#foot-control");
+let groundY, controlHeight;
 const ctx = canvas.getContext("2d");
 const statusLine = document.querySelector(".status");
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -22,7 +24,7 @@ function estimate(x,y) {
 function project(x,y,z){
   const u=x*Math.cos(yaw)-y*Math.sin(yaw);
   const v=x*Math.sin(yaw)+y*Math.cos(yaw);
-  return [width/2+unit*u,viewHeight*.56+unit*(v*Math.sin(pitch)-z*Math.cos(pitch))];
+  return [width/2+unit*u,groundY+unit*(v*Math.sin(pitch)-z*Math.cos(pitch))];
 }
 function line(points,color,thickness){
   ctx.beginPath(); points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
@@ -33,10 +35,10 @@ function dot(pos,r,color){
 }
 function draw(){
   ctx.clearRect(0,0,width,viewHeight);
-  unit=Math.min(width/3.6,viewHeight/2.15)*zoom;
+  unit=Math.min(width/3.6,controlHeight/2.15)*zoom;
   // Invert the fixed camera projection to cover all four viewport corners.
   const halfU=width/(2*unit);
-  const halfV=.60*viewHeight/(unit*Math.sin(pitch));
+  const halfV=Math.max(groundY,viewHeight-groundY)/(unit*Math.sin(pitch));
   const extentX=Math.ceil((halfU*Math.abs(Math.cos(yaw))+halfV*Math.abs(Math.sin(yaw))+.7)*8);
   const extentY=Math.ceil((halfU*Math.abs(Math.sin(yaw))+halfV*Math.abs(Math.cos(yaw))+.7)*8);
   for(let axis=0;axis<2;axis++){
@@ -77,6 +79,8 @@ function draw(){
 }
 function resize(){
   const box=canvas.getBoundingClientRect(), ratio=Math.min(devicePixelRatio,2);
+  const area=control.getBoundingClientRect();
+  controlHeight=area.height;groundY=area.top-box.top+area.height*.56;
   width=box.width;viewHeight=box.height;canvas.width=width*ratio;canvas.height=viewHeight*ratio;
   ctx.setTransform(ratio,0,0,ratio,0,0);draw();
 }
@@ -106,25 +110,26 @@ function land(){
 }
 const selector=document.querySelector("#leg");
 selector.onchange=()=>{cancelAnimationFrame(frame);legs[active].foot=sample(legs[active].foot.x,legs[active].foot.y);active=selector.selectedIndex;prediction=estimate(legs[active].foot.x,legs[active].foot.y);draw();};
-canvas.onpointerdown=e=>{
+control.onpointerdown=e=>{
   if(!e.isPrimary)return;
   const b=canvas.getBoundingClientRect();
   const hits=legs.map(({foot:f},i)=>{const [x,y]=project(f.x,f.y,f.z);return {i,d:Math.hypot(x-e.clientX+b.left,y-e.clientY+b.top)};}).sort((a,b)=>a.d-b.d);
   if(hits[0].d<24){selector.selectedIndex=hits[0].i;selector.onchange();}
   const f=legs[active].foot;
-  drag={sx:e.clientX,sy:e.clientY,x:f.x,y:f.y};canvas.setPointerCapture(e.pointerId);aim(f.x,f.y);
+  drag={sx:e.clientX,sy:e.clientY,x:f.x,y:f.y};control.setPointerCapture(e.pointerId);aim(f.x,f.y);
 };
-canvas.onpointermove=e=>{
+control.onpointermove=e=>{
   if(!drag||!e.isPrimary)return;
   const u=(e.clientX-drag.sx)/unit,v=(e.clientY-drag.sy)/(unit*Math.sin(pitch));
   aim(drag.x+u*Math.cos(yaw)+v*Math.sin(yaw),drag.y-u*Math.sin(yaw)+v*Math.cos(yaw));
 };
-canvas.onpointerup=e=>{if(drag&&e.isPrimary){drag=null;land();}};
-canvas.onpointercancel=()=>{if(drag){drag=null;land();}};
-canvas.onkeydown=e=>{
+control.onpointerup=e=>{if(drag&&e.isPrimary){drag=null;land();}};
+control.onpointercancel=()=>{if(drag){drag=null;land();}};
+control.onkeydown=e=>{
   const f=legs[active].foot;
   if(e.key==="Enter"){land();return;}
   if(!e.key.startsWith("Arrow"))return;
   e.preventDefault();aim(f.x+.09*((e.key==="ArrowRight")-(e.key==="ArrowLeft")),f.y+.09*((e.key==="ArrowDown")-(e.key==="ArrowUp")));
 };
-new ResizeObserver(resize).observe(canvas);resize();
+const observer=new ResizeObserver(resize);
+observer.observe(canvas);observer.observe(control);observer.observe(document.querySelector(".profile"));resize();
