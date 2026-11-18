@@ -147,6 +147,30 @@ function visibleBody(u,v,hip,feet,ghost){
   body(center,hip,feet,ghost);
   ctx.restore();
 }
+function drawSwing(from,to,progress,color){
+  ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.lineCap="round";
+  function point(phase){
+    const p=interpolateFoot(from,to,phase);
+    return [p.x*width,projectY(p.x,p.y)-height*.052*Math.sin(Math.PI*phase)];
+  }
+  let start=point(progress);
+  for(let i=1;i<=20;i++){
+    const phase=progress+(1-progress)*i/20;
+    const end=point(phase);
+    const midPhase=phase-(1-progress)/40;
+    const depth=interpolateFoot(from,to,midPhase).y;
+    ctx.save();
+    clipToTerrain(Math.min(start[0],end[0])-2,Math.max(start[0],end[0])+2,depth);
+    ctx.beginPath();ctx.moveTo(...start);ctx.lineTo(...end);ctx.stroke();
+    ctx.restore();start=end;
+  }
+  for(const contact of [from,to]){
+    const px=contact.x*width;
+    ctx.save();clipToTerrain(px-9,px+9,contact.y);
+    ctx.beginPath();ctx.ellipse(px,projectY(contact.x,contact.y),7,3,0,0,2*Math.PI);ctx.stroke();
+    ctx.restore();
+  }
+}
 function draw(){
   ctx.clearRect(0,-headroom,width,height+headroom);
   ctx.drawImage(grid,0,-headroom,width,height+headroom);
@@ -160,24 +184,9 @@ function draw(){
   const hip=pelvisY??ground-legLength;
   ctx.save();
   // Render only the remaining swing, from the lifted foot to touchdown.
-  ctx.strokeStyle="#f1cc87";ctx.lineWidth=1.8;ctx.lineCap="round";
-  let start=swingPoint(robot.phase);
-  for(let i=1;i<=20;i++){
-    const phase=robot.phase+(1-robot.phase)*i/20;
-    const end=swingPoint(phase);
-    const midPhase=phase-(1-robot.phase)/40;
-    const depth=interpolateFoot(trailing,target,midPhase).y;
-    ctx.save();
-    clipToTerrain(Math.min(start[0],end[0])-2,Math.max(start[0],end[0])+2,depth);
-    ctx.beginPath();ctx.moveTo(...start);ctx.lineTo(...end);ctx.stroke();
-    ctx.restore();start=end;
-  }
-  for(const contact of [trailing,target]){
-    const px=contact.x*width;
-    ctx.save();clipToTerrain(px-9,px+9,contact.y);
-    ctx.beginPath();ctx.ellipse(px,projectY(contact.x,contact.y),7,3,0,0,2*Math.PI);ctx.stroke();
-    ctx.restore();
-  }
+  // The stance leg's next swing starts after the current leg touches down.
+  drawSwing(planted,nextTarget,0,"rgba(240,196,103,.62)");
+  drawSwing(trailing,target,robot.phase,"#ffda83");
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   visibleBody(robot.x,robot.y,hip,feet,false);
   ctx.restore();
