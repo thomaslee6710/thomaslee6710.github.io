@@ -87,9 +87,14 @@ function advance(dt){
     predict();
   }
 }
+function swingLift(from,to,phase){
+  const rise=height*drop*(terrainDepth(from.x,from.y)-terrainDepth(to.x,to.y));
+  const clearance=height*.052+clamp(rise*.65,0,height*.11);
+  return clearance*Math.sin(Math.PI*phase);
+}
 function swingPoint(phase){
   const p=interpolateFoot(trailing,target,phase);
-  return [p.x*width,projectY(p.x,p.y)-height*.052*Math.sin(Math.PI*phase)];
+  return [p.x*width,projectY(p.x,p.y)-swingLift(trailing,target,phase)];
 }
 function pose(){
   const ground=projectY(planted.x,planted.y);
@@ -183,6 +188,37 @@ function drawSwing(from,to,progress,color){
     ctx.restore();
   }
 }
+function drawQuadruped(){
+  const a=angle-.62;
+  const dog=route(a);
+  const scale=Math.min(1,width/530);
+  const dir=dog.direction<0?-1:1;
+  const px=dog.x*width;
+  const torso=projectY(dog.x,dog.y)-27*scale;
+  ctx.save();
+  clipToTerrain(px-55*scale,px+55*scale,dog.y);
+  ctx.lineCap="round";
+  for(const [front,lateral] of [[1,-1],[-1,-1],[1,1],[-1,1]]){
+    const phase=(robot.phase+(front===lateral?.5:0))%1;
+    const base=a+front*.063;
+    const from=route(base-.065),to=route(base+.065);
+    const p=interpolateFoot(from,to,phase);
+    p.y+=lateral*.018;
+    const footX=p.x*width, footY=projectY(p.x,p.y)-swingLift(from,to,phase)*.55;
+    const hipX=px+front*dir*16*scale;
+    ctx.beginPath();ctx.moveTo(hipX,torso);
+    ctx.lineTo((hipX+footX)/2-front*dir*5*scale,(torso+footY)/2);
+    ctx.lineTo(footX,footY);
+    ctx.lineWidth=3.5*scale;
+    ctx.strokeStyle=lateral>0?"#c6ded8":"#759b96";
+    ctx.stroke();
+  }
+  ctx.fillStyle="#91bcb3";
+  ctx.beginPath();ctx.roundRect(px-22*scale,torso-8*scale,44*scale,13*scale,4*scale);ctx.fill();
+  ctx.fillStyle="#c1dcd5";
+  ctx.beginPath();ctx.roundRect(px+(dir>0?19:-29)*scale,torso-11*scale,10*scale,10*scale,3*scale);ctx.fill();
+  ctx.restore();
+}
 function draw(){
   ctx.clearRect(0,-headroom,width,height+headroom);
   ctx.drawImage(grid,0,-headroom,width,height+headroom);
@@ -190,7 +226,7 @@ function draw(){
   const fy=height*(.14+.72*preview.y+drop*forecast.depth);
   const ghostSwing=interpolateFoot(planted,nextTarget,robot.phase);
   const ghostFeet=[[target.x*width,projectY(target.x,target.y)],
-    [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-height*.052*Math.sin(robot.phase*Math.PI)]];
+    [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-swingLift(planted,nextTarget,robot.phase)]];
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*43;
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
@@ -200,6 +236,7 @@ function draw(){
   drawSwing(planted,nextTarget,0,"rgba(240,196,103,.62)");
   drawSwing(trailing,target,robot.phase,"#ffda83");
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
+  drawQuadruped();
   visibleBody(robot.x,robot.y,hip,feet,false);
   ctx.restore();
 }
