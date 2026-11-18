@@ -157,6 +157,16 @@ function pose(){
   }
   return {ground:ground+(standingGround-ground)*humanStance,feet};
 }
+function terrainRise(a){
+  const p=route(a),ahead=route(a+.09);
+  return terrainDepth(p.x,p.y)-terrainDepth(ahead.x,ahead.y);
+}
+function slopeTilt(a){
+  const rise=terrainRise(a);
+  if(obstacleEffort(a)<.16||Math.abs(rise)<.018)return 0;
+  const facing=route(a).direction;
+  return clamp(-rise*1.7,-.32,.32)*facing+Math.sin(elapsed*17)*.065;
+}
 function body(px,hip,feet,ghost){
   const s=clamp(height/255,.78,1.12)*Math.min(1,width/475),dir=ghost?forecast.direction:robot.direction;
   ctx.save();ctx.lineJoin="round";ctx.lineCap="round";
@@ -197,6 +207,9 @@ function body(px,hip,feet,ghost){
     const wrist=[elbow[0]+facing*Math.sin(forearm)*11*s,elbow[1]+Math.cos(forearm)*11*s];
     limb([shoulder,elbow,wrist],near?"hsl(76 23% 36%)":"hsl(76 21% 34%)",4);
   }
+  ctx.translate(px,hip);
+  ctx.rotate(ghost||humanPause.left?0:slopeTilt(angle)*.62);
+  ctx.translate(-px,-hip);
   arm(false);
   plate(px-10*s,hip-28*s,21*s,30*s,6*s,"hsl(76 23% 39%)");
   plate(px-7*s,hip-46*s,16*s,16*s,5*s,"hsl(76 23% 45%)");
@@ -262,6 +275,7 @@ function drawQuadruped(predictive=false){
     (long*forwardY+wide*rightY)*scale*.45
   ];
   const px=dog.x*width;
+  const tilt=predictive||dogPause.left?0:slopeTilt(a);
   const legs=[];
   const step=.18, duty=.62;
   for(const [front,lateral] of [[1,-1],[-1,-1],[1,1],[-1,1]]){
@@ -289,7 +303,8 @@ function drawQuadruped(predictive=false){
   if(predictive)ctx.setLineDash([3,4]);
   for(const {front,lateral,from,to,swing,foot,standing} of legs){
     const [hipOffsetX,hipOffsetY]=projectBody(front*16,lateral*7);
-    const hipX=px+hipOffsetX,hipY=torso+hipOffsetY;
+    const hipX=px+hipOffsetX*Math.cos(tilt)-hipOffsetY*Math.sin(tilt);
+    const hipY=torso+hipOffsetX*Math.sin(tilt)+hipOffsetY*Math.cos(tilt);
     const dx=foot.x*width-hipX,dy=projectY(foot.x,foot.y)-swingLift(from,to,swing)*(1-standing)-hipY;
     const bearing=Math.atan2(dx,dy),segment=15*scale;
     const reach=clamp(Math.hypot(dx,dy),segment*.45,segment*1.93);
@@ -302,13 +317,14 @@ function drawQuadruped(predictive=false){
     ctx.stroke();
   }
   ctx.beginPath();
-  ctx.roundRect(px-22*scale,torso-8*scale,44*scale,13*scale,4*scale);
+  ctx.translate(px,torso);ctx.rotate(tilt);
+  ctx.roundRect(-22*scale,-8*scale,44*scale,13*scale,4*scale);
   if(predictive)ctx.stroke();else{ctx.fillStyle="hsl(284 23% 39%)";ctx.fill();}
   ctx.restore();
 }
 function drawEffortLines(a,centerY,spread,color="hsl(76 23% 36%)"){
-  const p=route(a),ahead=route(a+.09);
-  const rise=terrainDepth(p.x,p.y)-terrainDepth(ahead.x,ahead.y);
+  const p=route(a);
+  const rise=terrainRise(a);
   if(obstacleEffort(a)<.16||Math.abs(rise)<.018)return;
   ctx.save();
   const center=p.x*width;
