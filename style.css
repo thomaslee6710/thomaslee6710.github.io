@@ -16,3 +16,30 @@
 @media(max-width:580px){.landscape figcaption{align-items:start;flex-direction:column;gap:12px}.home footer{gap:6px}.profile{padding-top:32px}}
 
 .profile{display:grid;grid-template-columns:1.5fr 1fr;gap:50px;align-items:center}.profile h1{font-size:clamp(50px,6vw,86px)}.portrait{width:100%;height:350px;object-fit:cover;object-position:50% 61%;border-radius:8px}.profile p{font-size:20px}@media(max-width:700px){.profile{grid-template-columns:1fr;gap:25px}.portrait{height:300px;max-width:350px}.profile p{font-size:18px}}
+.home {background:#f7f6f0;color:#193632}
+.home nav,.home footer {border-color:#b9c6ba}
+.profile {padding-top:32px;gap:7%;grid-template-columns:1.8fr 1fr}
+.profile h1 {font-size:clamp(48px,5.8vw,82px)}
+.profile .kicker {color:#516958}
+.profile .portrait {height:clamp(200px,21vw,286px);object-position:center 53%}
+.home .worklink {color:#285c47}
+.foresight {max-width:1120px;width:90%;margin:32px auto;background:#193a35;color:#fffbed;border-radius:16px;overflow:hidden}
+.demo-heading,.demo-controls {padding:20px clamp(16px,3vw,38px);display:flex;justify-content:space-between;gap:20px;align-items:center}
+.demo-heading h2 {font-size:clamp(26px,3vw,43px);margin:5px 0}
+.demo-heading .kicker,.model-note {color:#c4dfc9;font:12px monospace}
+.tabletop {padding:15px 5% 9px;background:#24483f;background-image:radial-gradient(#487060 1px, transparent 1px);background-size:16px 16px}
+.surface {position:relative;height:100px;--stop:46%}
+.crate,.forecast,.origin,.target {position:absolute;top:30px;width:8%;height:49px;border-radius:4px;transform:translateX(-50%)}
+.crate {left:28%;background:linear-gradient(135deg,transparent 46%,#a58258 47% 52%,transparent 53%),#e2bf89;border:3px solid #bd985f;box-shadow:0 5px 0 #947243}
+.origin {left:10%;border:1px solid #a5b9ac;background:#61776645}
+.origin:after {content:'→';position:absolute;left:125%;top:2px;color:#e0e8d4;font-size:23px}
+.forecast {left:var(--stop);border:3px dashed #d4f393;background:#c1eb8925;transition:left .18s ease}
+.target {left:64%;top:24px;height:61px;width:10%;border:1px solid #f1f6dc;background:repeating-linear-gradient(135deg,transparent 0 6px,#ecf4cc33 6px 8px)}
+.target span {position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font:13px monospace}
+.legend {display:flex;justify-content:center;gap:20px;font-size:13px}
+.legend i {display:inline-block;width:13px;height:11px;vertical-align:middle;margin-right:5px}
+.solid {background:#e2bf89}.dashed {border:2px dashed #d4f393}
+.demo-controls {display:grid;grid-template-columns:1fr 1fr 1fr;align-items:start}
+.demo-controls p {font-size:15px;margin:3px 0}.demo-controls label {display:flex;justify-content:space-between;font-weight:bold}.demo-controls input {width:100%;accent-color:#c5e58d}
+@media(max-width:700px){.profile{grid-template-columns:1fr}.profile .portrait{width:100%;max-width:100%;height:230px;object-position:center 48%}.demo-controls{grid-template-columns:1fr;gap:12px}.model-note{display:none}.demo-heading{padding-bottom:12px}}
+@media(prefers-reduced-motion:reduce){.forecast{transition:none}}
