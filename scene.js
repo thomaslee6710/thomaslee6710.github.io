@@ -280,28 +280,26 @@ function drawEffortLines(a,centerY,spread){
   const p=route(a),ahead=route(a+.09);
   const rise=terrainDepth(p.x,p.y)-terrainDepth(ahead.x,ahead.y);
   if(obstacleEffort(a)<.16||Math.abs(rise)<.018)return;
-  const pulse=.45+.28*Math.sin(elapsed*20);
   ctx.save();
-  clipToTerrain(p.x*width-spread-15,p.x*width+spread+15,p.y);
-  ctx.strokeStyle="rgba(249,221,161,"+pulse+")";
-  ctx.lineWidth=1.5;ctx.lineCap="round";
+  const center=p.x*width;
+  clipToTerrain(center-spread-36,center+spread+36,p.y);
+  ctx.strokeStyle="#f9dda1";
+  ctx.lineWidth=1.7;ctx.lineCap="round";
   const marks=[
-    {side:-1,gap:4,offset:-20,length:17,phase:.4,lean:-3},
-    {side:-1,gap:10,offset:-14,length:9,phase:2.1,lean:2},
-    {side:1,gap:5,offset:13,length:13,phase:3.3,lean:4},
-    {side:1,gap:10,offset:21,length:8,phase:1.4,lean:-2},
+    {side:-1,offset:-17,length:14,tilt:-6,phase:0},
+    {side:-1,offset:-7,length:8,tilt:3,phase:.16},
+    {side:1,offset:9,length:15,tilt:7,phase:.44},
+    {side:1,offset:19,length:9,tilt:2,phase:.55},
   ];
-  for(const {side,gap,offset,length,phase,lean} of marks){
-    const x=p.x*width+side*(spread+gap);
-    const top=centerY+offset-length/2;
-    ctx.globalAlpha=.78+.22*Math.sin(elapsed*11+phase);
+  for(const {side,offset,length,tilt,phase} of marks){
+    const burst=(elapsed*3.2+phase)%1;
+    if(burst>.75)continue;
+    ctx.globalAlpha=.9*Math.sin(Math.PI*burst/.75);
+    const x=center+side*(spread+3+burst*12);
+    const y=centerY+offset;
     ctx.beginPath();
-    for(let y=0;y<=length;y++){
-      const t=y/length;
-      const wave=x+lean*t+side*(1.7*Math.sin(t*8+elapsed*12+phase)+.6*Math.sin(t*13-phase));
-      if(y===0)ctx.moveTo(wave,top+y);
-      else ctx.lineTo(wave,top+y);
-    }
+    ctx.moveTo(x,y);
+    ctx.bezierCurveTo(x+side*length*.34,y-3,x+side*length*.58,y+tilt+3,x+side*length,y+tilt);
     ctx.stroke();
   }
   ctx.restore();
