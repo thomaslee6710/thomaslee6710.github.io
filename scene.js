@@ -1,7 +1,7 @@
 const canvas = document.querySelector("#page-mesh");
 const walker = document.querySelector("#walker");
 const ctx = walker.getContext("2d");
-const surface = canvas.getContext("2d");
+
 const grid = document.createElement("canvas");
 const mesh = grid.getContext("2d");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
@@ -31,7 +31,7 @@ function terrainDepth(x,y){
 }
 function projectY(x,y){return height*(.14+.72*y+drop*terrainDepth(x,y));}
 function updateGrid(){
-  mesh.clearRect(0,0,width,height);
+  mesh.clearRect(0,-headroom,width,height+headroom);
   const cols=Math.ceil(width/20);
   // Paint from the far edge toward the near lip so folded faces occlude the hollow.
   const rows=28;
@@ -43,6 +43,10 @@ function updateGrid(){
     for(let i=-Math.ceil(cols*.12)-1;i<cols*1.12+1;i++){
       const y=(j+.5)/rows,x=(i+.5)/cols+.09*(y-.5);
       const depth=terrainDepth(x,y);
+      // Fade by the row's original position so lifting it carries its opacity upward.
+      const rowOpacity=Math.sin(Math.PI*clamp(.14+.72*y,0,1))**2;
+      if(rowOpacity<.002)continue;
+      mesh.globalAlpha=rowOpacity;
       const slope=(terrainDepth(x+.012,y)-terrainDepth(x-.012,y))*6+
                   (terrainDepth(x,y+.015)-terrainDepth(x,y-.015))*5;
       const light=clamp(24-14*depth+10*slope,8,39);
@@ -52,20 +56,7 @@ function updateGrid(){
       mesh.strokeStyle="hsla(158,38%,"+(49+8*slope)+"%,.62)";mesh.lineWidth=.7;mesh.stroke();
     }
   }
-  // Fade the cached terrain before compositing the walker and its forecast.
-  const fade=mesh.createLinearGradient(0,0,0,height);
-  // A smooth ramp across each half leaves no shoulder at the edge of the fade.
-  for(let i=0;i<=64;i++){
-    const offset=i/64;
-    const alpha=Math.sin(Math.PI*offset)**2;
-    fade.addColorStop(offset,"rgba(0,0,0,"+alpha+")");
-  }
-  mesh.save();
-  mesh.globalCompositeOperation="destination-in";
-  mesh.fillStyle=fade;
-  mesh.fillRect(0,0,width,height);
-  mesh.restore();
-  surface.clearRect(0,0,width,height);surface.drawImage(grid,0,0,width,height);
+  mesh.globalAlpha=1;
 }
 function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
@@ -153,6 +144,7 @@ function visibleBody(u,v,hip,feet,ghost){
 }
 function draw(){
   ctx.clearRect(0,-headroom,width,height+headroom);
+  ctx.drawImage(grid,0,-headroom,width,height+headroom);
   const preview=interpolateFoot(target,nextTarget,robot.phase);
   const fy=height*(.14+.72*preview.y+drop*forecast.depth);
   const ghostSwing=interpolateFoot(planted,nextTarget,robot.phase);
@@ -170,6 +162,10 @@ function draw(){
     if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
   }
   ctx.stroke();
+  // Keep just the takeoff and touchdown rings for this swing.
+  for(const contact of [trailing,target]){
+    ctx.beginPath();ctx.ellipse(contact.x*width,projectY(contact.x,contact.y),7,3,0,0,2*Math.PI);ctx.stroke();
+  }
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   visibleBody(robot.x,robot.y,hip,feet,false);
   ctx.restore();
@@ -190,7 +186,7 @@ function resize(){
   headroom=Math.ceil(Math.max(height,box.top-document.querySelector("#demo-title").getBoundingClientRect().top+120));
   walker.style.top=-headroom+"px";walker.style.height=(height+headroom)+"px";
   walker.width=canvas.width;walker.height=Math.ceil((height+headroom)*ratio);
-  ctx.setTransform(ratio,0,0,ratio,0,headroom*ratio);surface.setTransform(ratio,0,0,ratio,0,0);mesh.setTransform(ratio,0,0,ratio,0,0);
+  ctx.setTransform(ratio,0,0,ratio,0,headroom*ratio);grid.height=walker.height;mesh.setTransform(ratio,0,0,ratio,0,headroom*ratio);
   stride=clamp(68/width,.025,.15);pelvisY=undefined;predict();updateGrid();draw();
 }
 function changeDepth(delta){
