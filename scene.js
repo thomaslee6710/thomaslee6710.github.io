@@ -41,6 +41,16 @@ function updateGrid(){
       mesh.strokeStyle="hsla(158,38%,"+(49+8*slope)+"%,.62)";mesh.lineWidth=.7;mesh.stroke();
     }
   }
+  // Fade the cached terrain before compositing the walker and its forecast.
+  const fade=mesh.createLinearGradient(0,0,0,height);
+  for(const [offset,alpha] of [[0,0],[.07,.08],[.17,.38],[.27,.82],[.37,1],[.63,1],[.73,.82],[.83,.38],[.93,.08],[1,0]]){
+    fade.addColorStop(offset,"rgba(0,0,0,"+alpha+")");
+  }
+  mesh.save();
+  mesh.globalCompositeOperation="destination-in";
+  mesh.fillStyle=fade;
+  mesh.fillRect(0,0,width,height);
+  mesh.restore();
 }
 function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
