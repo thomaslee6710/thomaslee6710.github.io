@@ -3,14 +3,20 @@ const ctx = canvas.getContext("2d");
 const grid = document.createElement("canvas");
 const mesh = grid.getContext("2d");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-const patch = {x:.45, y:.52, depth:.48};
+const patch = {x:.51, y:.72, depth:.46};
 let targetDepth=patch.depth, terrainSpeed=0, dragY=0, dirty=false;
 const drop = .34;
-let pelvisY, fallSpeed=0, plantedX=.15, trailingX=.12, side=1;
-const robot = {x:.15, y:.52, direction:1, phase:0, observed:0, lateral:0};
+let pelvisY, fallSpeed=0, side=1;
+let angle=Math.PI*.76;
+function route(a){
+  return {x:.50+.36*Math.cos(a),y:.56+.24*Math.sin(a),direction:-Math.sin(a)};
+}
+const robot={...route(angle),phase:0,observed:0};
+let planted=route(angle), trailing=route(angle-.11);
 let width, height, ratio, stride, forecast, pointer=null, previous;
 function terrainDepth(x,y){
-  return patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
+  const hills=.32*Math.sin(2*Math.PI*(x+.23*y))+.18*Math.cos(2*Math.PI*(y-.52*x));
+  return hills+patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
 }
 function projectY(x,y){return height*(.14+.72*y+drop*terrainDepth(x,y));}
 function updateGrid(){
@@ -36,36 +42,35 @@ function updateGrid(){
     }
   }
 }
+function angleStep(depth){
+  return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
+}
 function predict(){
-  forecast={x:robot.x+robot.direction*stride*(1-.56*Math.abs(robot.observed)),
-    y:robot.y+robot.lateral,depth:robot.observed};
+  forecast={...route(angle+angleStep(robot.observed)),depth:robot.observed};
 }
 function advance(dt){
   const amount=Math.min(dt,.05)/.9;
-  robot.x+=amount*robot.direction*stride*(1-.56*Math.abs(terrainDepth(robot.x,robot.y)));
-  robot.y=clamp(robot.y+amount*robot.lateral,.29,.74);
+  angle+=amount*angleStep(terrainDepth(robot.x,robot.y));
+  Object.assign(robot,route(angle));
   robot.phase+=amount;
   if(robot.phase>=1){
     robot.phase-=1;
-    trailingX=plantedX;plantedX=robot.x+robot.direction*stride*.30;side*=-1;
-    const spread=.07;
-    const left=terrainDepth(plantedX,robot.y-spread),right=terrainDepth(plantedX,robot.y+spread);
-    robot.observed=(left+right)/2;
-    robot.lateral=clamp((left-right)*.11+(.52-robot.y)*.12,-.06,.06);
-    if(robot.x+robot.direction*stride>.93||robot.x+robot.direction*stride<.07)robot.direction*=-1;
+    trailing=planted;planted=route(angle+.30*angleStep(robot.observed));side*=-1;
+    robot.observed=terrainDepth(planted.x,planted.y);
     predict();
   }
 }
 function pose(){
   const phase=robot.phase, blend=phase*phase*(3-2*phase);
-  const landing=robot.x+robot.direction*stride*(1-phase+.30)*(1-.56*Math.abs(robot.observed));
-  const swingX=trailingX+(landing-trailingX)*blend;
-  const ground=projectY(plantedX,robot.y);
-  const lift=height*.072*Math.sin(Math.PI*phase);
-  return {ground,feet:[[plantedX*width,ground],[swingX*width,projectY(swingX,robot.y)-lift]]};
+  const landing=route(angle+(1.30-phase)*angleStep(robot.observed));
+  const swingX=trailing.x+(landing.x-trailing.x)*blend;
+  const swingY=trailing.y+(landing.y-trailing.y)*blend;
+  const ground=projectY(planted.x,planted.y);
+  const lift=height*.052*Math.sin(Math.PI*phase);
+  return {ground,feet:[[planted.x*width,ground],[swingX*width,projectY(swingX,swingY)-lift]]};
 }
 function body(px,hip,feet,ghost){
-  const s=clamp(height/255,.78,1.12)*Math.min(1,width/475),dir=robot.direction;
+  const s=clamp(height/255,.78,1.12)*Math.min(1,width/475),dir=ghost?forecast.direction:robot.direction;
   ctx.save();ctx.lineJoin="round";ctx.lineCap="round";
   if(ghost)ctx.setLineDash([4,4]);
   function limb(points,ink,weight){
@@ -84,7 +89,7 @@ function body(px,hip,feet,ghost){
   });
   plate(px-10*s,hip-28*s,21*s,30*s,6*s,"#cee0d6");
   plate(px-7*s,hip-46*s,16*s,16*s,5*s,"#e2e9df");
-  if(!ghost)plate(px+(dir>0?0:-6)*s,hip-42*s,8*s,4*s,1,"#173d41");
+  if(!ghost)plate(px+(-3+3*dir)*s,hip-42*s,8*s,4*s,1,"#173d41");
   for(const n of [-1,1]){
     const swing=n*side*Math.cos(robot.phase*Math.PI)*9*s;
     limb([[px+n*5*s,hip-22*s],[px+swing-dir*4*s,hip-10*s],[px+1.6*swing+dir*3*s,hip-3*s]],n>0?"#efbb7d":"#839e96",4);
@@ -102,7 +107,7 @@ function draw(){
 function settle(dt){
   const {ground}=pose();
   const length=clamp(height/255,.78,1.12)*Math.min(1,width/475)*47;
-  const rest=ground-length*(1-.15*terrainDepth(plantedX,robot.y));
+  const rest=ground-length*(1-.15*terrainDepth(planted.x,planted.y));
   if(pelvisY===undefined)pelvisY=rest;
   const time=clamp(dt,0,.04);
   fallSpeed+=clamp(100*(rest-pelvisY)-17*fallSpeed,-height*6,height*6)*time;
