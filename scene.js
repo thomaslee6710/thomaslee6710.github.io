@@ -71,7 +71,6 @@ function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
 }
 let target, nextTarget;
-const tracks=[];
 function footfall(a,leg){
   const p=route(a);
   return {...p,y:p.y+.018*leg};
@@ -94,19 +93,17 @@ function advance(dt){
   if(robot.phase>=1){
     robot.phase-=1;
     trailing=planted;planted=target;target=nextTarget;side*=-1;
-    tracks.push(planted);
-    if(tracks.length>7)tracks.shift();
     robot.observed=terrainDepth(planted.x,planted.y);
     predict();
   }
 }
+function swingPoint(phase){
+  const p=interpolateFoot(trailing,target,phase);
+  return [p.x*width,projectY(p.x,p.y)-height*.052*Math.sin(Math.PI*phase)];
+}
 function pose(){
-  const phase=robot.phase;
-  const swing=interpolateFoot(trailing,target,phase);
-  const swingX=swing.x,swingY=swing.y;
   const ground=projectY(planted.x,planted.y);
-  const lift=height*.052*Math.sin(Math.PI*phase);
-  return {ground,feet:[[planted.x*width,ground],[swingX*width,projectY(swingX,swingY)-lift]]};
+  return {ground,feet:[[planted.x*width,ground],swingPoint(robot.phase)]};
 }
 function body(px,hip,feet,ghost){
   const s=clamp(height/255,.78,1.12)*Math.min(1,width/475),dir=ghost?forecast.direction:robot.direction;
@@ -165,18 +162,14 @@ function draw(){
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
   ctx.save();
-  const trail=[...tracks,target];
-  ctx.strokeStyle="#f1cc87";ctx.lineWidth=1.6;ctx.setLineDash([3,4]);
-  ctx.beginPath();
-  trail.forEach((p,i)=>{
-    const px=p.x*width,py=projectY(p.x,p.y);
-    if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py);
-  });
-  ctx.stroke();ctx.setLineDash([]);
-  for(const p of trail){
-    ctx.beginPath();ctx.ellipse(p.x*width,projectY(p.x,p.y),p===target?7:4,2.8,0,0,Math.PI*2);
-    if(p===target)ctx.stroke();else{ctx.fillStyle="#d7b77b";ctx.fill();}
+  // Render only the remaining swing, from the lifted foot to touchdown.
+  ctx.strokeStyle="#f1cc87";ctx.lineWidth=1.8;ctx.beginPath();
+  for(let i=0;i<=20;i++){
+    const phase=robot.phase+(1-robot.phase)*i/20;
+    const [px,py]=swingPoint(phase);
+    if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);
   }
+  ctx.stroke();
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   visibleBody(robot.x,robot.y,hip,feet,false);
   ctx.restore();
