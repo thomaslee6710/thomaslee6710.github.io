@@ -232,8 +232,6 @@ function drawQuadruped(predictive=false){
   }
   ctx.beginPath();ctx.roundRect(px-22*scale,torso-8*scale,44*scale,13*scale,4*scale);
   if(predictive)ctx.stroke();else{ctx.fillStyle="#91bcb3";ctx.fill();}
-  ctx.beginPath();ctx.roundRect(px+(dir>0?19:-29)*scale,torso-11*scale,10*scale,10*scale,3*scale);
-  if(predictive)ctx.stroke();else{ctx.fillStyle="#c1dcd5";ctx.fill();}
   ctx.restore();
 }
 function draw(){
