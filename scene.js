@@ -99,7 +99,7 @@ function requestStop(state,a){
   if(effort<.13)state.armed=true;
   if(state.armed&&effort>.32){state.armed=false;state.pending=true;}
 }
-const standingDuration=.7;
+const standingDuration=.95;
 function stopWobble(state){
   const progress=1-state.left/standingDuration;
   return .23*(1-progress)**2*Math.sin(progress*3*Math.PI);
