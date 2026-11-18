@@ -42,7 +42,7 @@ function updateGrid(){
       // Fade by the row's original position so lifting it carries its opacity upward.
       const topFade=clamp((.14+.72*y)/.28,0,1);
       const screenY=projectY(x,y)/height;
-      const bottomFade=clamp((1-screenY)/.12,0,1);
+      const bottomFade=clamp((1-screenY)/.17,0,1);
       const rowOpacity=topFade*topFade*bottomFade*bottomFade;
       if(rowOpacity<.002)continue;
       mesh.globalAlpha=rowOpacity;
