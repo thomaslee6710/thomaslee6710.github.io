@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Thomas Chun Fai Lee studies world models and control at Carnegie Mellon University."><title>Thomas Chun Fai Lee</title><link rel="stylesheet" href="style.css?v=foot3"><script src="scene.js?v=original-mesh" defer></script><style>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Thomas Chun Fai Lee studies world models and control at Carnegie Mellon University."><title>Thomas Chun Fai Lee</title><link rel="stylesheet" href="style.css?v=foot3"><script src="scene.js?v=free-step" defer></script><style>
 .profile-text{container-type:inline-size}
 .profile h1{font-size:clamp(20px,8.6cqw,62px);white-space:nowrap;line-height:1.15}
 .home{background:#102d30;color:#f7f5e7}
@@ -9,7 +9,7 @@
 .terrain-copy,.terrain-controls{max-width:1250px;margin:auto;padding:0 5vw}
 .terrain canvas{margin:0 auto}.terrain h2{font-size:clamp(28px,4vw,44px);margin:0}.terrain p{margin:8px 0}.terrain canvas{display:block;width:100%;height:clamp(210px,24vw,300px);cursor:crosshair;touch-action:pan-y}.terrain label{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.terrain input{accent-color:#cef09b;width:min(240px,100%)}.terrain small{color:#c9d9cd}.terrain canvas{height:clamp(320px,36vw,510px);touch-action:none;cursor:grab}.terrain canvas:active{cursor:grabbing}.terrain-controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.terrain button{background:transparent;border:1px solid #78988d;color:inherit;font:inherit;padding:4px 13px;border-radius:5px;cursor:pointer}.terrain button:focus-visible,.terrain canvas:focus-visible{outline:2px solid #d3ed91}.terrain .status{color:#d3ed91}
 .terrain{position:relative;isolation:isolate;margin:0;padding-top:16px}
-.terrain canvas{width:100%;height:clamp(185px,25svh,255px);touch-action:pan-y}
+.terrain canvas{width:100%;height:clamp(215px,29svh,295px);touch-action:pan-y}
 .terrain-copy,.terrain-controls{width:100%;max-width:none;margin:0;pointer-events:none}
 .terrain-copy{padding:8px 5vw 0;background:linear-gradient(#102d30 4%,#102d30e6 65%,transparent)}
 .terrain-copy select,.terrain-copy label{pointer-events:auto;width:fit-content}
@@ -21,9 +21,9 @@
 .mesh-strip{position:relative;isolation:isolate}
 #page-mesh{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:-1;mask-image:linear-gradient(to bottom,transparent,#000 20%,#000 80%,transparent)}
 .mesh-strip{height:clamp(185px,25svh,255px)}
-#page-mesh{pointer-events:auto;z-index:0;cursor:ew-resize;touch-action:pan-y}
+#page-mesh{pointer-events:auto;z-index:0;cursor:grab;touch-action:none}
 .terrain-copy,.terrain-controls{background:transparent}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
 <main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I study how robots use world models to predict the effects of their actions from just a few physical interactions.</p><a href="#demo-title" style="margin-right:1.3em">Explore the terrain ↓</a><a class="worklink" href="research.html">Explore my research <span aria-hidden="true">↗</span></a></div><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></section>
-<section class="terrain" aria-labelledby="demo-title"><div class="terrain-copy"><h2 id="demo-title">Terrain from touch</h2><p>Three contact points shape an estimate of the ground around them.</p></div><div class="mesh-strip"><canvas id="page-mesh" aria-label="Terrain estimated from three simulated contacts"></canvas></div><div class="terrain-controls"><label>Move the contacts <input id="position" type="range" min="0" max="100" value="48"></label></div></section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer></body></html>
+<section class="terrain" aria-labelledby="demo-title"><div class="terrain-copy"><h2 id="demo-title">Predicting the next step</h2><p>Drag across the ground.</p></div><div class="mesh-strip"><canvas id="page-mesh" tabindex="0" aria-label="Drag anywhere on the mesh, or use the arrow keys. The solid foot feels the ground. The dashed foot predicts the next step."></canvas></div></section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer></body></html>
