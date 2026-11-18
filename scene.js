@@ -1,10 +1,15 @@
 const canvas = document.querySelector("#page-mesh");
-const ctx = canvas.getContext("2d");
+const walker = document.querySelector("#walker");
+const ctx = walker.getContext("2d");
+const surface = canvas.getContext("2d");
 const grid = document.createElement("canvas");
 const mesh = grid.getContext("2d");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const patch = {x:.51, y:.72, depth:.46};
-let targetDepth=patch.depth, terrainSpeed=0, dragY=0, dirty=false;
+const resolution=80;
+const edits=new Float32Array((resolution+1)**2);
+const brush={x:.5,y:.55};
+let dragY=0,dirty=false,headroom=0;
 const drop = .34;
 let pelvisY, fallSpeed=0, side=1;
 let angle=Math.PI*.76;
@@ -16,7 +21,11 @@ let planted=route(angle), trailing=route(angle-.11);
 let width, height, ratio, stride, forecast, pointer=null, previous;
 function terrainDepth(x,y){
   const hills=.32*Math.sin(2*Math.PI*(x+.23*y))+.18*Math.cos(2*Math.PI*(y-.52*x));
-  return hills+patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
+  const u=clamp(x,0,1)*resolution,v=clamp(y,0,1)*resolution;
+  const i=Math.min(Math.floor(u),resolution-1),j=Math.min(Math.floor(v),resolution-1);
+  const n=j*(resolution+1)+i,a=u-i,b=v-j;
+  const edit=(1-b)*((1-a)*edits[n]+a*edits[n+1])+b*((1-a)*edits[n+resolution+1]+a*edits[n+resolution+2]);
+  return edit+hills+patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
 }
 function projectY(x,y){return height*(.14+.72*y+drop*terrainDepth(x,y));}
 function updateGrid(){
@@ -54,6 +63,7 @@ function updateGrid(){
   mesh.fillStyle=fade;
   mesh.fillRect(0,0,width,height);
   mesh.restore();
+  surface.clearRect(0,0,width,height);surface.drawImage(grid,0,0,width,height);
 }
 function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
@@ -109,17 +119,14 @@ function body(px,hip,feet,ghost){
   }
   ctx.restore();
 }
-let cameraOffset=0;
+
 function draw(){
-  ctx.clearRect(0,0,width,height);
+  ctx.clearRect(0,-headroom,width,height+headroom);
   const fy=height*(.14+.72*forecast.y+drop*forecast.depth),fx=forecast.x*width;
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*47;
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
-  const headTop=Math.min(hip,fy-legLength)-legLength*46/47;
-  cameraOffset=Math.max(0,16-headTop);
-  ctx.save();ctx.translate(0,cameraOffset);
-  ctx.drawImage(grid,0,0,width,height);
+  ctx.save();
   body(fx,fy-legLength,[[fx-7,fy],[fx+8,fy]],true);
   body(robot.x*width,hip,feet,false);
   ctx.restore();
@@ -137,32 +144,39 @@ function resize(){
   const box=canvas.getBoundingClientRect();width=box.width;height=box.height;
   ratio=Math.min(devicePixelRatio||1,2);
   for(const layer of [canvas,grid]){layer.width=Math.round(width*ratio);layer.height=Math.round(height*ratio);}
-  ctx.setTransform(ratio,0,0,ratio,0,0);mesh.setTransform(ratio,0,0,ratio,0,0);
+  headroom=Math.ceil(Math.max(height,box.top-document.querySelector("#demo-title").getBoundingClientRect().top+120));
+  walker.style.top=-headroom+"px";walker.style.height=(height+headroom)+"px";
+  walker.width=canvas.width;walker.height=Math.ceil((height+headroom)*ratio);
+  ctx.setTransform(ratio,0,0,ratio,0,headroom*ratio);surface.setTransform(ratio,0,0,ratio,0,0);mesh.setTransform(ratio,0,0,ratio,0,0);
   stride=clamp(68/width,.025,.15);pelvisY=undefined;predict();updateGrid();draw();
 }
 function changeDepth(delta){
-  targetDepth=clamp(targetDepth+delta,-.83,1.15);
-}
-function flex(dt){
-  const t=Math.min(dt,.04);
-  if(Math.abs(targetDepth-patch.depth)+Math.abs(terrainSpeed)>.002){
-    terrainSpeed+=(175*(targetDepth-patch.depth)-16*terrainSpeed)*t;
-    patch.depth+=terrainSpeed*t;
-    dirty=true;
+  if(!delta)return;
+  for(let j=0;j<=resolution;j++)for(let i=0;i<=resolution;i++){
+    const r=((i/resolution-brush.x)/.15)**2+((j/resolution-brush.y)/.24)**2;
+    if(r>=1)continue;
+    const n=j*(resolution+1)+i;
+    edits[n]=clamp(edits[n]+delta*(1-r)**2,-2.8,1.6);
   }
-  if(dirty){updateGrid();dirty=false;}
+  dirty=true;
 }
+function flex(){if(dirty){updateGrid();dirty=false;}}
 canvas.onpointerdown=e=>{
   if(pointer!==null)return;
   const box=canvas.getBoundingClientRect();
   pointer=e.pointerId;canvas.setPointerCapture(pointer);
-  patch.x=clamp((e.clientX-box.left)/width,0,1);
-  patch.y=clamp(((e.clientY-box.top-cameraOffset)/height-.14-drop*patch.depth)/.72,0,1);
-  dragY=e.clientY;dirty=true;
+  brush.x=clamp((e.clientX-box.left)/width,0,1);
+  // Select the nearest visible mesh row at the clicked height.
+  let best=Infinity;
+  for(let j=resolution;j>=0;j--){
+    const y=j/resolution,error=Math.abs(projectY(brush.x,y)-(e.clientY-box.top));
+    if(error<best){best=error;brush.y=y;}
+  }
+  dragY=e.clientY;
 };
 canvas.onpointermove=e=>{
   if(pointer!==e.pointerId)return;
-  patch.x=clamp((e.clientX-canvas.getBoundingClientRect().left)/width,0,1);
+  brush.x=clamp((e.clientX-canvas.getBoundingClientRect().left)/width,0,1);
   changeDepth((e.clientY-dragY)/(height*drop));
   dragY=e.clientY;dirty=true;
 };
@@ -172,8 +186,8 @@ canvas.onkeydown=e=>{
   e.preventDefault();
   if(e.key==="ArrowUp")changeDepth(-.15);
   if(e.key==="ArrowDown")changeDepth(.15);
-  if(e.key==="ArrowLeft")patch.x=clamp(patch.x-.03,0,1);
-  if(e.key==="ArrowRight")patch.x=clamp(patch.x+.03,0,1);
+  if(e.key==="ArrowLeft")brush.x=clamp(brush.x-.03,0,1);
+  if(e.key==="ArrowRight")brush.x=clamp(brush.x+.03,0,1);
   dirty=true;
 };
 function animate(now){
