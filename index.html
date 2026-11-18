@@ -34,7 +34,16 @@
 .terrain-caption{width:fit-content;max-width:100%;padding:17px clamp(18px,3vw,26px);border:1px solid #d6dfd4;border-radius:14px;background:transparent}
 .terrain .terrain-caption h2{font-family:monospace;font-size:15px;font-weight:700;letter-spacing:normal}
 .terrain .terrain-caption p{font-family:monospace;font-size:12px;margin-bottom:0}
+.about-me{max-width:1250px;margin:clamp(28px,5vw,56px) auto 0;padding:0 5vw}
+.about-me h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 12px}
+.about-me p{font-size:16px;max-width:72ch;margin:0 0 12px}
+.about-me p:last-child{margin-bottom:0}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
 <main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I want to study how robots can use limited data from physically interacting with the world to decide how to act in unstructured environments.</p><a class="worklink" href="resume.pdf">Résumé <span aria-hidden="true">↗</span></a></div><div class="portrait-frame"><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></div></section>
+<section class="about-me" aria-labelledby="about-title">
+  <h2 id="about-title">About me</h2>
+  <p>I’m a master’s student in robotics at Carnegie Mellon University, where I’m advised by Professor Aaron Johnson in the Robomechanics Lab. I earned my bachelor’s degree in mechanical engineering at CMU, with an additional major in robotics and a minor in business administration.</p>
+  <p>I’m interested in how robots can use a few physical interactions to decide what to do next. I study how learned dynamics models can help robots adapt their motion when the ground slips or gives way, and how controllers can let robots yield to unexpected forces while continuing a task. My broader goal is to build robots that can help people with physical work in unfamiliar environments.</p>
+</section>
 <section class="terrain" aria-labelledby="demo-title"><div class="terrain-copy"><div class="terrain-caption"><h2 id="demo-title">Predicting the next step</h2><p>Drag the terrain up or down to see how the robots’ predicted steps change.</p></div></div><div class="mesh-strip"><canvas id="page-mesh" tabindex="0" aria-label="Drag up or down to shape the ground at each spot. Left and right arrows move the brush; up and down sculpt. The dashed humanoid predicts the next stride."></canvas><canvas id="walker" aria-hidden="true"></canvas></div></section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer></body></html>
