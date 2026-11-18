@@ -266,19 +266,24 @@ function drawEffortLines(a,centerY,spread){
   clipToTerrain(p.x*width-spread-15,p.x*width+spread+15,p.y);
   ctx.strokeStyle="rgba(249,221,161,"+pulse+")";
   ctx.lineWidth=1.5;ctx.lineCap="round";
-  for(const side of [-1,1]){
-    for(let i=0;i<2;i++){
-      const x=p.x*width+side*(spread+3+i*6);
-      const length=i?12:19;
-      const top=centerY-length/2;
-      ctx.beginPath();
-      for(let y=0;y<=length;y++){
-        const wave=x+side*2.2*Math.sin(y/length*4*Math.PI+elapsed*14+i*.6);
-        if(y===0)ctx.moveTo(wave,top+y);
-        else ctx.lineTo(wave,top+y);
-      }
-      ctx.stroke();
+  const marks=[
+    {side:-1,gap:4,offset:-8,length:20,phase:.4,lean:-3},
+    {side:-1,gap:10,offset:4,length:10,phase:2.1,lean:2},
+    {side:1,gap:5,offset:3,length:17,phase:3.3,lean:4},
+    {side:1,gap:10,offset:-10,length:12,phase:1.4,lean:-2},
+  ];
+  for(const {side,gap,offset,length,phase,lean} of marks){
+    const x=p.x*width+side*(spread+gap);
+    const top=centerY+offset-length/2;
+    ctx.globalAlpha=.78+.22*Math.sin(elapsed*11+phase);
+    ctx.beginPath();
+    for(let y=0;y<=length;y++){
+      const t=y/length;
+      const wave=x+lean*t+side*(1.7*Math.sin(t*8+elapsed*12+phase)+.6*Math.sin(t*13-phase));
+      if(y===0)ctx.moveTo(wave,top+y);
+      else ctx.lineTo(wave,top+y);
     }
+    ctx.stroke();
   }
   ctx.restore();
 }
