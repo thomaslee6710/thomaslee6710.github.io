@@ -70,8 +70,21 @@ function updateGrid(){
 function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
 }
+let target, nextTarget;
+const tracks=[];
+function footfall(a,leg){
+  const p=route(a);
+  return {...p,y:p.y+.018*leg};
+}
 function predict(){
-  forecast={...route(angle+angleStep(robot.observed)),depth:robot.observed};
+  const step=angleStep(robot.observed);
+  if(!target)target=footfall(angle+step,-side);
+  nextTarget=footfall(angle+2*step,side);
+  forecast={...target,depth:robot.observed};
+}
+function interpolateFoot(a,b,t){
+  const blend=t*t*(3-2*t);
+  return {x:a.x+(b.x-a.x)*blend,y:a.y+(b.y-a.y)*blend};
 }
 function advance(dt){
   const amount=Math.min(dt,.05)/.9;
@@ -80,16 +93,17 @@ function advance(dt){
   robot.phase+=amount;
   if(robot.phase>=1){
     robot.phase-=1;
-    trailing=planted;planted=route(angle+.30*angleStep(robot.observed));side*=-1;
+    trailing=planted;planted=target;target=nextTarget;side*=-1;
+    tracks.push(planted);
+    if(tracks.length>7)tracks.shift();
     robot.observed=terrainDepth(planted.x,planted.y);
     predict();
   }
 }
 function pose(){
-  const phase=robot.phase, blend=phase*phase*(3-2*phase);
-  const landing=route(angle+(1.30-phase)*angleStep(robot.observed));
-  const swingX=trailing.x+(landing.x-trailing.x)*blend;
-  const swingY=trailing.y+(landing.y-trailing.y)*blend;
+  const phase=robot.phase;
+  const swing=interpolateFoot(trailing,target,phase);
+  const swingX=swing.x,swingY=swing.y;
   const ground=projectY(planted.x,planted.y);
   const lift=height*.052*Math.sin(Math.PI*phase);
   return {ground,feet:[[planted.x*width,ground],[swingX*width,projectY(swingX,swingY)-lift]]};
@@ -116,7 +130,7 @@ function body(px,hip,feet,ghost){
   plate(px-7*s,hip-46*s,16*s,16*s,5*s,"#e2e9df");
   if(!ghost)plate(px+(-3+3*dir)*s,hip-42*s,8*s,4*s,1,"#173d41");
   for(const n of [-1,1]){
-    const swing=n*side*Math.cos(robot.phase*Math.PI)*9*s;
+    const swing=n*(ghost?-side:side)*Math.cos(robot.phase*Math.PI)*9*s;
     limb([[px+n*5*s,hip-22*s],[px+swing-dir*4*s,hip-10*s],[px+1.6*swing+dir*3*s,hip-3*s]],n>0?"#efbb7d":"#839e96",4);
   }
   ctx.restore();
@@ -142,12 +156,28 @@ function visibleBody(u,v,hip,feet,ghost){
 }
 function draw(){
   ctx.clearRect(0,-headroom,width,height+headroom);
-  const fy=height*(.14+.72*forecast.y+drop*forecast.depth),fx=forecast.x*width;
+  const preview=interpolateFoot(target,nextTarget,robot.phase);
+  const fy=height*(.14+.72*preview.y+drop*forecast.depth);
+  const ghostSwing=interpolateFoot(planted,nextTarget,robot.phase);
+  const ghostFeet=[[target.x*width,projectY(target.x,target.y)],
+    [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-height*.052*Math.sin(robot.phase*Math.PI)]];
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*47;
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
   ctx.save();
-  visibleBody(forecast.x,forecast.y,fy-legLength,[[fx-7,fy],[fx+8,fy]],true);
+  const trail=[...tracks,target];
+  ctx.strokeStyle="#f1cc87";ctx.lineWidth=1.6;ctx.setLineDash([3,4]);
+  ctx.beginPath();
+  trail.forEach((p,i)=>{
+    const px=p.x*width,py=projectY(p.x,p.y);
+    if(i)ctx.lineTo(px,py);else ctx.moveTo(px,py);
+  });
+  ctx.stroke();ctx.setLineDash([]);
+  for(const p of trail){
+    ctx.beginPath();ctx.ellipse(p.x*width,projectY(p.x,p.y),p===target?7:4,2.8,0,0,Math.PI*2);
+    if(p===target)ctx.stroke();else{ctx.fillStyle="#d7b77b";ctx.fill();}
+  }
+  visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   visibleBody(robot.x,robot.y,hip,feet,false);
   ctx.restore();
 }
@@ -172,11 +202,19 @@ function resize(){
 }
 function changeDepth(delta){
   if(!delta)return;
+  let amount=delta;
+  const footprint=[];
   for(let j=0;j<=resolution;j++)for(let i=0;i<=resolution;i++){
     const r=((i/resolution-brush.x)/.15)**2+((j/resolution-brush.y)/.24)**2;
     if(r>=1)continue;
     const n=j*(resolution+1)+i;
-    edits[n]=clamp(edits[n]+delta*(1-r)**2,-ridgeLimit,1.6);
+    const weight=(1-r)**2;
+    footprint.push([n,weight]);
+    if(delta<0)amount=Math.max(amount,(-ridgeLimit-edits[n])/weight);
+  }
+  if(delta<0 && amount>=-1e-7)return;
+  for(const [n,weight] of footprint){
+    edits[n]=Math.min(1.6,edits[n]+amount*weight);
   }
   dirty=true;
 }
