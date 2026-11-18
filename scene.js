@@ -292,14 +292,16 @@ function drawEffortLines(a,centerY,spread){
     {side:1,offset:19,length:9,tilt:2,phase:.55},
   ];
   for(const {side,offset,length,tilt,phase} of marks){
-    const burst=(elapsed*3.2+phase)%1;
+    const cycle=elapsed*2.7+phase;
+    const burst=cycle%1;
+    const burstSide=Math.floor(cycle)%2===0?side:-side;
     if(burst>.75)continue;
     ctx.globalAlpha=.9*Math.sin(Math.PI*burst/.75);
-    const x=center+side*(spread+3+burst*12);
+    const x=center+burstSide*(spread+3+burst*12);
     const y=centerY+offset;
     ctx.beginPath();
     ctx.moveTo(x,y);
-    ctx.bezierCurveTo(x+side*length*.34,y-3,x+side*length*.58,y+tilt+3,x+side*length,y+tilt);
+    ctx.bezierCurveTo(x+burstSide*length*.34,y-3,x+burstSide*length*.58,y+tilt+3,x+burstSide*length,y+tilt);
     ctx.stroke();
   }
   ctx.restore();
