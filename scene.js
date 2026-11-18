@@ -173,7 +173,7 @@ function body(px,hip,feet,ghost){
   if(ghost)ctx.setLineDash([4,4]);
   function limb(points,ink,weight){
     ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
-    ctx.strokeStyle=ghost?"hsl(76 23% 32% / .76)":ink;ctx.lineWidth=ghost?1.4:weight*s;ctx.stroke();
+    ctx.strokeStyle=ghost?"hsl(11 23% 32% / .76)":ink;ctx.lineWidth=ghost?1.4:weight*s;ctx.stroke();
   }
   function plate(x,y,w,h,r,color){
     ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(ghost)ctx.stroke();else{ctx.fillStyle=color;ctx.fill();}
@@ -194,7 +194,7 @@ function body(px,hip,feet,ghost){
     const shin=Math.atan2(facing*(ankle[0]-knee[0]),ankle[1]-knee[1]);
     const flex=clamp(thigh-shin,.16,2.15);
     const foot=[limitedKnee[0]+facing*segment*Math.sin(thigh-flex),limitedKnee[1]+segment*Math.cos(thigh-flex)];
-    limb([[hx,hy],limitedKnee,foot,[foot[0]+dir*8*s,foot[1]+s]],i?"hsl(76 23% 37%)":"hsl(76 21% 31%)",6);
+    limb([[hx,hy],limitedKnee,foot,[foot[0]+dir*8*s,foot[1]+s]],i?"hsl(11 23% 37%)":"hsl(11 21% 31%)",6);
   });
   function arm(near){
     const sideOfTorso=near?1:-1;
@@ -205,14 +205,14 @@ function body(px,hip,feet,ghost){
     const forearm=upper+.32+.44*Math.max(0,cycle);
     const elbow=[shoulder[0]+facing*Math.sin(upper)*13*s,shoulder[1]+Math.cos(upper)*13*s];
     const wrist=[elbow[0]+facing*Math.sin(forearm)*11*s,elbow[1]+Math.cos(forearm)*11*s];
-    limb([shoulder,elbow,wrist],near?"hsl(76 23% 36%)":"hsl(76 21% 34%)",4);
+    limb([shoulder,elbow,wrist],near?"hsl(11 23% 36%)":"hsl(11 21% 34%)",4);
   }
   ctx.translate(px,hip);
   ctx.rotate(ghost||humanPause.left?0:slopeTilt(angle)*.62);
   ctx.translate(-px,-hip);
   arm(false);
-  plate(px-10*s,hip-28*s,21*s,30*s,6*s,"hsl(76 23% 39%)");
-  plate(px-7*s,hip-46*s,16*s,16*s,5*s,"hsl(76 23% 45%)");
+  plate(px-10*s,hip-28*s,21*s,30*s,6*s,"hsl(11 23% 39%)");
+  plate(px-7*s,hip-46*s,16*s,16*s,5*s,"hsl(11 23% 45%)");
   if(!ghost)plate(px+(-3+3*dir)*s,hip-42*s,8*s,4*s,1,"#e7d9cf");
   arm(true);
   ctx.restore();
@@ -297,7 +297,7 @@ function drawQuadruped(predictive=false){
   }
   const support=legs.filter(leg=>!leg.swing);
   const torso=support.reduce((sum,leg)=>sum+projectY(leg.foot.x,leg.foot.y),0)/support.length-25*scale;
-  if(!predictive&&!dogPause.left)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"hsl(284 23% 31% / .72)");
+  if(!predictive&&!dogPause.left)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"hsl(213 23% 31% / .72)");
   ctx.save();clipToTerrain(px-65*scale,px+65*scale,dog.y);
   ctx.lineCap="round";ctx.lineJoin="round";
   if(predictive)ctx.setLineDash([3,4]);
@@ -313,16 +313,16 @@ function drawQuadruped(predictive=false){
     ctx.beginPath();ctx.moveTo(hipX,hipY);ctx.lineTo(kneeX,kneeY);
     ctx.lineTo(hipX+Math.sin(bearing)*reach,hipY+Math.cos(bearing)*reach);
     ctx.lineWidth=(predictive?1.3:3.5)*scale;
-    ctx.strokeStyle=predictive?"hsl(284 23% 32% / .76)":lateral>0?"hsl(284 23% 37%)":"hsl(284 21% 31%)";
+    ctx.strokeStyle=predictive?"hsl(213 23% 32% / .76)":lateral>0?"hsl(213 23% 37%)":"hsl(213 21% 31%)";
     ctx.stroke();
   }
   ctx.beginPath();
   ctx.translate(px,torso);ctx.rotate(tilt);
   ctx.roundRect(-22*scale,-8*scale,44*scale,13*scale,4*scale);
-  if(predictive)ctx.stroke();else{ctx.fillStyle="hsl(284 23% 39%)";ctx.fill();}
+  if(predictive)ctx.stroke();else{ctx.fillStyle="hsl(213 23% 39%)";ctx.fill();}
   ctx.restore();
 }
-function drawEffortLines(a,centerY,spread,color="hsl(76 23% 36%)"){
+function drawEffortLines(a,centerY,spread,color="hsl(11 23% 36%)"){
   const p=route(a);
   const rise=terrainRise(a);
   if(obstacleEffort(a)<.16||Math.abs(rise)<.018)return;
@@ -366,13 +366,13 @@ function draw(){
   ctx.save();
   // Render only the remaining swing, from the lifted foot to touchdown.
   // The stance leg's next swing starts after the current leg touches down.
-  drawSwing(planted,nextTarget,0,"hsl(76 23% 31% / .72)");
-  drawSwing(trailing,target,robot.phase,"hsl(76 23% 36%)");
+  drawSwing(planted,nextTarget,0,"hsl(11 23% 31% / .72)");
+  drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)");
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   drawQuadruped(true);
   drawQuadruped();
   const dog=route(dogAngle);
-  if(!dogPause.left)drawEffortLines(dogAngle,projectY(dog.x,dog.y)-30,28,"hsl(284 23% 36%)");
+  if(!dogPause.left)drawEffortLines(dogAngle,projectY(dog.x,dog.y)-30,28,"hsl(213 23% 36%)");
   visibleBody(robot.x,robot.y,hip,feet,false);
   if(!humanPause.left)drawEffortLines(angle,hip-22,18);
   ctx.restore();
