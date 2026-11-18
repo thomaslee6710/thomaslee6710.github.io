@@ -3,15 +3,16 @@ const ctx = canvas.getContext("2d");
 const grid = document.createElement("canvas");
 const mesh = grid.getContext("2d");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
-const patch = {x:.45, y:.52};
+const patch = {x:.45, y:.52, depth:.48};
+let targetDepth=patch.depth, terrainSpeed=0, dragY=0, dirty=false;
 const drop = .34;
 let pelvisY, fallSpeed=0, plantedX=.15, trailingX=.12, side=1;
 const robot = {x:.15, y:.52, direction:1, phase:0, observed:0, lateral:0};
 let width, height, ratio, stride, forecast, pointer=null, previous;
-function softness(x,y){
-  return Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
+function terrainDepth(x,y){
+  return patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
 }
-function projectY(x,y){return height*(.14+.72*y+drop*softness(x,y));}
+function projectY(x,y){return height*(.14+.72*y+drop*terrainDepth(x,y));}
 function updateGrid(){
   mesh.clearRect(0,0,width,height);
   const cols=Math.ceil(width/20);
@@ -24,9 +25,9 @@ function updateGrid(){
   for(let j=-9;j<rows+10;j++){
     for(let i=-Math.ceil(cols*.12)-1;i<cols*1.12+1;i++){
       const y=(j+.5)/rows,x=(i+.5)/cols+.09*(y-.5);
-      const depth=softness(x,y);
-      const slope=(softness(x+.012,y)-softness(x-.012,y))*6+
-                  (softness(x,y+.015)-softness(x,y-.015))*5;
+      const depth=terrainDepth(x,y);
+      const slope=(terrainDepth(x+.012,y)-terrainDepth(x-.012,y))*6+
+                  (terrainDepth(x,y+.015)-terrainDepth(x,y-.015))*5;
       const light=clamp(24-14*depth+10*slope,8,39);
       const points=[vertex(i,j),vertex(i+1,j),vertex(i+1,j+1),vertex(i,j+1)];
       mesh.beginPath();points.forEach(([px,py],k)=>k?mesh.lineTo(px,py):mesh.moveTo(px,py));
@@ -36,19 +37,19 @@ function updateGrid(){
   }
 }
 function predict(){
-  forecast={x:robot.x+robot.direction*stride*(1-.56*robot.observed),
+  forecast={x:robot.x+robot.direction*stride*(1-.56*Math.abs(robot.observed)),
     y:robot.y+robot.lateral,depth:robot.observed};
 }
 function advance(dt){
   const amount=Math.min(dt,.05)/.9;
-  robot.x+=amount*robot.direction*stride*(1-.56*softness(robot.x,robot.y));
+  robot.x+=amount*robot.direction*stride*(1-.56*Math.abs(terrainDepth(robot.x,robot.y)));
   robot.y=clamp(robot.y+amount*robot.lateral,.29,.74);
   robot.phase+=amount;
   if(robot.phase>=1){
     robot.phase-=1;
     trailingX=plantedX;plantedX=robot.x+robot.direction*stride*.30;side*=-1;
     const spread=.07;
-    const left=softness(plantedX,robot.y-spread),right=softness(plantedX,robot.y+spread);
+    const left=terrainDepth(plantedX,robot.y-spread),right=terrainDepth(plantedX,robot.y+spread);
     robot.observed=(left+right)/2;
     robot.lateral=clamp((left-right)*.11+(.52-robot.y)*.12,-.06,.06);
     if(robot.x+robot.direction*stride>.93||robot.x+robot.direction*stride<.07)robot.direction*=-1;
@@ -57,7 +58,7 @@ function advance(dt){
 }
 function pose(){
   const phase=robot.phase, blend=phase*phase*(3-2*phase);
-  const landing=robot.x+robot.direction*stride*(1-phase+.30)*(1-.56*robot.observed);
+  const landing=robot.x+robot.direction*stride*(1-phase+.30)*(1-.56*Math.abs(robot.observed));
   const swingX=trailingX+(landing-trailingX)*blend;
   const ground=projectY(plantedX,robot.y);
   const lift=height*.072*Math.sin(Math.PI*phase);
@@ -101,7 +102,7 @@ function draw(){
 function settle(dt){
   const {ground}=pose();
   const length=clamp(height/255,.78,1.12)*Math.min(1,width/475)*47;
-  const rest=ground-length*(1-.15*softness(plantedX,robot.y));
+  const rest=ground-length*(1-.15*terrainDepth(plantedX,robot.y));
   if(pelvisY===undefined)pelvisY=rest;
   const time=clamp(dt,0,.04);
   fallSpeed+=clamp(100*(rest-pelvisY)-17*fallSpeed,-height*6,height*6)*time;
@@ -114,21 +115,44 @@ function resize(){
   ctx.setTransform(ratio,0,0,ratio,0,0);mesh.setTransform(ratio,0,0,ratio,0,0);
   stride=clamp(68/width,.025,.15);pelvisY=undefined;predict();updateGrid();draw();
 }
-function movePatch(x,y){patch.x=clamp(x,0,1);patch.y=clamp(y,0,1);updateGrid();draw();}
-function drag(e){
-  const box=canvas.getBoundingClientRect();
-  movePatch((e.clientX-box.left)/width,((e.clientY-box.top)/height-.14)/.72);
+function changeDepth(delta){
+  targetDepth=clamp(targetDepth+delta,-.83,1.15);
 }
-canvas.onpointerdown=e=>{if(pointer!==null)return;pointer=e.pointerId;canvas.setPointerCapture(pointer);drag(e);};
-canvas.onpointermove=e=>{if(pointer===e.pointerId)drag(e);};
+function flex(dt){
+  const t=Math.min(dt,.04);
+  if(Math.abs(targetDepth-patch.depth)+Math.abs(terrainSpeed)>.002){
+    terrainSpeed+=(175*(targetDepth-patch.depth)-16*terrainSpeed)*t;
+    patch.depth+=terrainSpeed*t;
+    dirty=true;
+  }
+  if(dirty){updateGrid();dirty=false;}
+}
+canvas.onpointerdown=e=>{
+  if(pointer!==null)return;
+  const box=canvas.getBoundingClientRect();
+  pointer=e.pointerId;canvas.setPointerCapture(pointer);
+  patch.x=clamp((e.clientX-box.left)/width,0,1);
+  patch.y=clamp(((e.clientY-box.top)/height-.14-drop*patch.depth)/.72,0,1);
+  dragY=e.clientY;dirty=true;
+};
+canvas.onpointermove=e=>{
+  if(pointer!==e.pointerId)return;
+  patch.x=clamp((e.clientX-canvas.getBoundingClientRect().left)/width,0,1);
+  changeDepth((e.clientY-dragY)/(height*drop));
+  dragY=e.clientY;dirty=true;
+};
 canvas.onlostpointercapture=()=>{pointer=null;};
 canvas.onkeydown=e=>{
-  const directions={ArrowLeft:[-.03,0],ArrowRight:[.03,0],ArrowUp:[0,-.06],ArrowDown:[0,.06]};
-  const delta=directions[e.key];if(!delta)return;
-  e.preventDefault();movePatch(patch.x+delta[0],patch.y+delta[1]);
+  if(!["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(e.key))return;
+  e.preventDefault();
+  if(e.key==="ArrowUp")changeDepth(-.15);
+  if(e.key==="ArrowDown")changeDepth(.15);
+  if(e.key==="ArrowLeft")patch.x=clamp(patch.x-.03,0,1);
+  if(e.key==="ArrowRight")patch.x=clamp(patch.x+.03,0,1);
+  dirty=true;
 };
 function animate(now){
-  if(previous!==undefined){const dt=(now-previous)/1000;advance(dt);settle(dt);}
+  if(previous!==undefined){const dt=(now-previous)/1000;flex(dt);advance(dt);settle(dt);}
   previous=now;draw();requestAnimationFrame(animate);
 }
 new ResizeObserver(resize).observe(canvas);resize();requestAnimationFrame(animate);
