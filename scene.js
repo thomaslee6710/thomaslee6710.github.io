@@ -7,8 +7,7 @@ const mesh = grid.getContext("2d");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const patch = {x:.51, y:.72, depth:.46};
 const resolution=80;
-const edits=new Float32Array((resolution+1)**2);
-const brush={x:.5,y:.55};
+const brush={x:patch.x,y:patch.y};
 let dragY=0,dirty=false,headroom=0;
 const drop = .34;
 // Limit the added ridge to a quarter of the terrain panel height.
@@ -24,11 +23,7 @@ let planted=route(angle), trailing=route(angle-.11);
 let width, height, ratio, stride, forecast, pointer=null, previous;
 function terrainDepth(x,y){
   const hills=.32*Math.sin(2*Math.PI*(x+.23*y))+.18*Math.cos(2*Math.PI*(y-.52*x));
-  const u=clamp(x,0,1)*resolution,v=clamp(y,0,1)*resolution;
-  const i=Math.min(Math.floor(u),resolution-1),j=Math.min(Math.floor(v),resolution-1);
-  const n=j*(resolution+1)+i,a=u-i,b=v-j;
-  const edit=(1-b)*((1-a)*edits[n]+a*edits[n+1])+b*((1-a)*edits[n+resolution+1]+a*edits[n+resolution+2]);
-  return edit+hills+patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
+  return hills+patch.depth*Math.exp(-(((x-patch.x)/.135)**2+((y-patch.y)/.25)**2));
 }
 function projectY(x,y){return height*(.14+.72*y+drop*terrainDepth(x,y));}
 function updateGrid(){
@@ -212,21 +207,9 @@ function resize(){
 }
 function changeDepth(delta){
   if(!delta)return;
-  let amount=delta;
-  const footprint=[];
-  for(let j=0;j<=resolution;j++)for(let i=0;i<=resolution;i++){
-    const r=((i/resolution-brush.x)/.15)**2+((j/resolution-brush.y)/.24)**2;
-    if(r>=1)continue;
-    const n=j*(resolution+1)+i;
-    const weight=(1-r)**2;
-    footprint.push([n,weight]);
-    if(delta<0)amount=Math.max(amount,(-ridgeLimit-edits[n])/weight);
-    else amount=Math.min(amount,(hollowLimit-edits[n])/weight);
-  }
-  if(Math.abs(amount)<1e-7 || Math.sign(amount)!==Math.sign(delta))return;
-  for(const [n,weight] of footprint){
-    edits[n]+=amount*weight;
-  }
+  patch.x=brush.x;
+  patch.y=brush.y;
+  patch.depth=clamp(patch.depth+delta,-ridgeLimit,hollowLimit);
   dirty=true;
 }
 function flex(){if(dirty){updateGrid();dirty=false;}}
