@@ -267,11 +267,17 @@ function drawEffortLines(a,centerY,spread){
   ctx.strokeStyle="rgba(249,221,161,"+pulse+")";
   ctx.lineWidth=1.5;ctx.lineCap="round";
   for(const side of [-1,1]){
-    const x=p.x*width+side*spread;
     for(let i=0;i<2;i++){
-      const y=centerY+i*7;
-      ctx.beginPath();ctx.moveTo(x,y);
-      ctx.lineTo(x+side*(6+2*Math.sin(elapsed*20+i)),y-2+i*3);ctx.stroke();
+      const x=p.x*width+side*(spread+3+i*6);
+      const length=i?12:19;
+      const top=centerY-length/2;
+      ctx.beginPath();
+      for(let y=0;y<=length;y++){
+        const wave=x+side*2.2*Math.sin(y/length*4*Math.PI+elapsed*14+i*.6);
+        if(y===0)ctx.moveTo(wave,top+y);
+        else ctx.lineTo(wave,top+y);
+      }
+      ctx.stroke();
     }
   }
   ctx.restore();
