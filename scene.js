@@ -51,7 +51,11 @@ function updateGrid(){
       const topFade=clamp((.14+.72*y)/.28,0,1);
       const screenY=projectY(x,y)/height;
       const bottomFade=clamp((1-screenY)/.17,0,1);
-      const rowOpacity=topFade*topFade*bottomFade*bottomFade;
+      const deformation=sculptedDepth(x,y);
+      const sculpt=clamp(Math.abs(deformation)*2,0,1);
+      const crest=clamp(-deformation*3,0,1);
+      const edgeOpacity=topFade*topFade*bottomFade*bottomFade;
+      const rowOpacity=edgeOpacity+(1-edgeOpacity)*crest*crest;
       if(rowOpacity<.002)continue;
       mesh.globalAlpha=rowOpacity;
       const slope=(terrainDepth(x+.012,y)-terrainDepth(x-.012,y))*6+
@@ -59,9 +63,8 @@ function updateGrid(){
       const light=clamp(24-14*depth+10*slope,8,39);
       const points=[vertex(i,j),vertex(i+1,j),vertex(i+1,j+1),vertex(i,j+1)];
       mesh.beginPath();points.forEach(([px,py],k)=>k?mesh.lineTo(px,py):mesh.moveTo(px,py));
-      const sculpt=clamp(Math.abs(sculptedDepth(x,y))*2,0,1);
       mesh.closePath();
-      mesh.fillStyle="hsl("+(160-22*sculpt)+" "+(20+19*sculpt)+"% "+(61+light*.76-23*sculpt)+"%)";
+      mesh.fillStyle="hsl("+(160-22*sculpt)+" "+(20+19*sculpt)+"% "+(61+light*.76-23*sculpt-12*crest)+"%)";
       mesh.fill();
       mesh.strokeStyle="hsla(159,25%,"+(40+8*slope)+"%,.33)";mesh.lineWidth=.7;mesh.stroke();
     }
