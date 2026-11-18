@@ -7,6 +7,7 @@ const mesh = grid.getContext("2d");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const patch = {x:.51, y:.72, depth:.46};
 const resolution=80;
+let edited=false, elapsed=0, humanoidEffort=0, dogEffort=0;
 const brush={x:patch.x,y:patch.y};
 let dragY=0,dirty=false,headroom=0;
 const drop = .34;
@@ -15,6 +16,8 @@ const ridgeLimit=.25/drop;
 const hollowLimit=.25/drop;
 let pelvisY, fallSpeed=0, side=1;
 let angle=Math.PI*.76;
+const followingGap=1.03;
+let dogAngle=angle-followingGap;
 function route(a){
   return {x:.50+.36*Math.cos(a),y:.56+.24*Math.sin(a),direction:-Math.sin(a)};
 }
@@ -75,9 +78,24 @@ function interpolateFoot(a,b,t){
   const blend=t*t*(3-2*t);
   return {x:a.x+(b.x-a.x)*blend,y:a.y+(b.y-a.y)*blend};
 }
+function obstacleEffort(a){
+  if(!edited)return 0;
+  const p=route(a+.045);
+  const dx=(p.x-patch.x)/.135,dy=(p.y-patch.y)/.25;
+  return clamp(Math.abs(patch.depth)*2.4,0,1)*Math.exp(-.65*(dx*dx+dy*dy));
+}
 function advance(dt){
-  const amount=Math.min(dt,.05)/.9;
-  angle+=amount*angleStep(terrainDepth(robot.x,robot.y));
+  const time=Math.min(dt,.05);
+  elapsed+=time;
+  const blend=1-Math.exp(-time*11);
+  humanoidEffort+=(obstacleEffort(angle)-humanoidEffort)*blend;
+  dogEffort+=(obstacleEffort(dogAngle)-dogEffort)*blend;
+  const hesitation=.62+.28*Math.sin(elapsed*12);
+  const amount=time/.9*(1-humanoidEffort*hesitation);
+  const angularSpeed=angleStep(terrainDepth(robot.x,robot.y));
+  angle+=amount*angularSpeed;
+  const correction=clamp((angle-dogAngle-followingGap)*2,-.2,.2);
+  dogAngle=Math.min(angle-.68,dogAngle+time/.9*(angularSpeed+correction)*(1-dogEffort*hesitation));
   Object.assign(robot,route(angle));
   robot.phase+=amount;
   if(robot.phase>=1){
@@ -195,7 +213,7 @@ function drawSwing(from,to,progress,color){
   }
 }
 function drawQuadruped(predictive=false){
-  const a=angle-1.03+(predictive?.18:0);
+  const a=dogAngle+(predictive?.18:0);
   const dog=route(a);
   const scale=Math.min(1,width/530), dir=dog.direction<0?-1:1;
   const px=dog.x*width;
@@ -212,7 +230,7 @@ function drawQuadruped(predictive=false){
     legs.push({front,lateral,from,to,swing,foot});
   }
   const support=legs.filter(leg=>!leg.swing);
-  const torso=support.reduce((sum,leg)=>sum+projectY(leg.foot.x,leg.foot.y),0)/support.length-25*scale;
+  const torso=support.reduce((sum,leg)=>sum+projectY(leg.foot.x,leg.foot.y),0)/support.length-25*scale+(predictive?0:dogEffort*Math.sin(elapsed*16)*4*scale);
   if(!predictive)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"rgba(116,218,215,.62)");
   ctx.save();clipToTerrain(px-65*scale,px+65*scale,dog.y);
   ctx.lineCap="round";ctx.lineJoin="round";
@@ -244,7 +262,7 @@ function draw(){
     [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-swingLift(planted,nextTarget,robot.phase)]];
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*43;
   const {ground,feet}=pose();
-  const hip=pelvisY??ground-legLength;
+  const hip=(pelvisY??ground-legLength)+humanoidEffort*Math.sin(elapsed*14)*5;
   ctx.save();
   // Render only the remaining swing, from the lifted foot to touchdown.
   // The stance leg's next swing starts after the current leg touches down.
@@ -253,7 +271,7 @@ function draw(){
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   drawQuadruped(true);
   drawQuadruped();
-  visibleBody(robot.x,robot.y,hip,feet,false);
+  visibleBody(robot.x+humanoidEffort*Math.sin(elapsed*11)*4/width,robot.y,hip,feet,false);
   ctx.restore();
 }
 function settle(dt){
@@ -280,6 +298,7 @@ function changeDepth(delta){
   patch.x=brush.x;
   patch.y=brush.y;
   patch.depth=clamp(patch.depth+delta,-ridgeLimit,hollowLimit);
+  edited=true;
   dirty=true;
 }
 function flex(){if(dirty){updateGrid();dirty=false;}}
