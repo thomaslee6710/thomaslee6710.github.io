@@ -8,12 +8,12 @@
 .terrain{width:100%;margin:clamp(32px,5vw,70px) 0 26px}
 .terrain-copy,.terrain-controls{max-width:1250px;margin:auto;padding:0 5vw}
 .terrain canvas{margin:0 auto}.terrain h2{font-size:clamp(28px,4vw,44px);margin:0}.terrain p{margin:8px 0}.terrain canvas{display:block;width:100%;height:clamp(210px,24vw,300px);cursor:crosshair;touch-action:pan-y}.terrain label{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.terrain input{accent-color:#cef09b;width:min(240px,100%)}.terrain small{color:#c9d9cd}.terrain canvas{height:clamp(320px,36vw,510px);touch-action:none;cursor:grab}.terrain canvas:active{cursor:grabbing}.terrain-controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.terrain button{background:transparent;border:1px solid #78988d;color:inherit;font:inherit;padding:4px 13px;border-radius:5px;cursor:pointer}.terrain button:focus-visible,.terrain canvas:focus-visible{outline:2px solid #d3ed91}.terrain .status{color:#d3ed91}
-.terrain{position:relative;isolation:isolate;min-height:100vh;min-height:100svh;margin:0;display:flex;flex-direction:column;justify-content:space-between}
-.terrain canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1;touch-action:pan-y}
+.terrain{position:relative;isolation:isolate;margin:0;padding-top:16px}
+.terrain canvas{width:100%;height:clamp(185px,25svh,255px);touch-action:pan-y}
 .terrain-copy,.terrain-controls{width:100%;max-width:none;margin:0;pointer-events:none}
-.terrain-copy{padding:clamp(18px,4vh,44px) 5vw 24px;background:linear-gradient(#102d30 4%,#102d30e6 65%,transparent)}
+.terrain-copy{padding:8px 5vw 0;background:linear-gradient(#102d30 4%,#102d30e6 65%,transparent)}
 .terrain-copy select,.terrain-copy label{pointer-events:auto;width:fit-content}
-.terrain-controls{padding:24px 5vw;background:linear-gradient(transparent,#102d30 72%)}
+.terrain-controls{padding:4px 5vw 12px}
 .terrain canvas:focus-visible{outline-offset:-3px}
 @media(pointer:coarse){.terrain canvas{touch-action:none}.terrain-copy,.terrain-controls{pointer-events:auto;touch-action:pan-y}}
 </style></head>
