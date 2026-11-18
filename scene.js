@@ -13,6 +13,7 @@ let dragY=0,dirty=false,headroom=0;
 const drop = .34;
 // Limit the added ridge to a quarter of the terrain panel height.
 const ridgeLimit=.25/drop;
+const hollowLimit=.25/drop;
 let pelvisY, fallSpeed=0, side=1;
 let angle=Math.PI*.76;
 function route(a){
@@ -200,10 +201,11 @@ function changeDepth(delta){
     const weight=(1-r)**2;
     footprint.push([n,weight]);
     if(delta<0)amount=Math.max(amount,(-ridgeLimit-edits[n])/weight);
+    else amount=Math.min(amount,(hollowLimit-edits[n])/weight);
   }
-  if(delta<0 && amount>=-1e-7)return;
+  if(Math.abs(amount)<1e-7 || Math.sign(amount)!==Math.sign(delta))return;
   for(const [n,weight] of footprint){
-    edits[n]=Math.min(1.6,edits[n]+amount*weight);
+    edits[n]+=amount*weight;
   }
   dirty=true;
 }
