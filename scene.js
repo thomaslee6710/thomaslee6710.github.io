@@ -11,6 +11,8 @@ const edits=new Float32Array((resolution+1)**2);
 const brush={x:.5,y:.55};
 let dragY=0,dirty=false,headroom=0;
 const drop = .34;
+// Limit the added ridge to a quarter of the terrain panel height.
+const ridgeLimit=.25/drop;
 let pelvisY, fallSpeed=0, side=1;
 let angle=Math.PI*.76;
 function route(a){
@@ -120,6 +122,24 @@ function body(px,hip,feet,ghost){
   ctx.restore();
 }
 
+// In this projection larger ground-y is nearer the viewer. The foremost
+// terrain silhouette hides the part of a figure below it at each screen x.
+function visibleBody(u,v,hip,feet,ghost){
+  const center=u*width;
+  const left=Math.min(center-48,...feet.map(p=>p[0]-24));
+  const right=Math.max(center+48,...feet.map(p=>p[0]+24));
+  ctx.save();
+  ctx.beginPath();ctx.moveTo(left,-headroom);ctx.lineTo(right,-headroom);
+  for(let px=right;px>=left-3;px-=3){
+    let rim=Infinity;
+    for(let row=v+.012;row<=1.36;row+=1/64)
+      rim=Math.min(rim,projectY(px/width,row));
+    ctx.lineTo(px,rim+1);
+  }
+  ctx.closePath();ctx.clip();
+  body(center,hip,feet,ghost);
+  ctx.restore();
+}
 function draw(){
   ctx.clearRect(0,-headroom,width,height+headroom);
   const fy=height*(.14+.72*forecast.y+drop*forecast.depth),fx=forecast.x*width;
@@ -127,8 +147,8 @@ function draw(){
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
   ctx.save();
-  body(fx,fy-legLength,[[fx-7,fy],[fx+8,fy]],true);
-  body(robot.x*width,hip,feet,false);
+  visibleBody(forecast.x,forecast.y,fy-legLength,[[fx-7,fy],[fx+8,fy]],true);
+  visibleBody(robot.x,robot.y,hip,feet,false);
   ctx.restore();
 }
 function settle(dt){
@@ -156,7 +176,7 @@ function changeDepth(delta){
     const r=((i/resolution-brush.x)/.15)**2+((j/resolution-brush.y)/.24)**2;
     if(r>=1)continue;
     const n=j*(resolution+1)+i;
-    edits[n]=clamp(edits[n]+delta*(1-r)**2,-2.8,1.6);
+    edits[n]=clamp(edits[n]+delta*(1-r)**2,-ridgeLimit,1.6);
   }
   dirty=true;
 }
