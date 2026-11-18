@@ -43,7 +43,10 @@ function updateGrid(){
   }
   // Fade the cached terrain before compositing the walker and its forecast.
   const fade=mesh.createLinearGradient(0,0,0,height);
-  for(const [offset,alpha] of [[0,0],[.07,.08],[.17,.38],[.27,.82],[.37,1],[.63,1],[.73,.82],[.83,.38],[.93,.08],[1,0]]){
+  // A smooth ramp across each half leaves no shoulder at the edge of the fade.
+  for(let i=0;i<=64;i++){
+    const offset=i/64;
+    const alpha=Math.sin(Math.PI*offset)**2;
     fade.addColorStop(offset,"rgba(0,0,0,"+alpha+")");
   }
   mesh.save();
