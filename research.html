@@ -18,7 +18,12 @@
 }
 .research-project-demos figure { margin: 0; min-width: 0; }
 .research-project-demos img { display: block; width: 100%; height: auto; border-radius: 12px; }
-.research-project-demos figcaption { margin-top: 6px; }
+.research-project-media { margin: 20px 0 0; }
+.research-project-media .research-project-video { margin-top: 0; }
+.research-projects figcaption {
+  margin-top: 6px;
+  font: 0.8125rem/1.45 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
 @media (max-width: 440px) {
   .research-project-demos { grid-template-columns: 1fr; }
 }
@@ -31,10 +36,13 @@
   <p class="research-project-summary">This project investigates how a quadruped can use limited data from physical interactions to adapt its control during terrain transitions. Our model-based reinforcement learning approach plans in the latent space of a world model conditioned on a transformer encoding of recent actions and state changes.</p>
   <p class="research-project-summary">In simulation, history conditioning improved motion prediction over the fixed model under changes in friction and actuator strength, including actuator strengths outside the training range. After mid-episode changes, prediction error fell by 11–21% for the tested reductions in actuator strength and by 43% for the tested drop in friction. With Field AI, we use Newton to evaluate quadruped locomotion across firm-ground-to-mud transitions and mud patches with varying foot withdrawal resistance.</p>
   <p class="research-project-summary">We are investigating two ways to condition the world model for adaptive control. The first uses reinforcement learning to select which recent state transitions to retain after a terrain change. The second retrieves contact history from another leg that previously contacted the planned foothold to improve predictions for the next step.</p>
+  <figure class="research-project-media">
   <video class="research-project-video" controls playsinline preload="metadata" width="960" height="540" aria-label="Quadruped locomotion on deformable terrain in Newton">
     <source src="mud.mp4" type="video/mp4">
     <a href="mud.mp4">Download the mud locomotion video</a>.
   </video>
+  <figcaption>Quadruped locomotion through mud in Newton</figcaption>
+  </figure>
   </div>
 </article>
 <article class="row">
