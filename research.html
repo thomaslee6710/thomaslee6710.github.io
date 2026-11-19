@@ -10,6 +10,18 @@
 .research-projects > .row > div > :last-child { margin-block-end: 0; }
 .research-project-summary { font-size: 0.875rem; max-width: none; }
 .research-project-video { display: block; width: 100%; height: auto; margin-top: 20px; border-radius: 12px; }
+.research-project-demos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+.research-project-demos figure { margin: 0; min-width: 0; }
+.research-project-demos img { display: block; width: 100%; height: auto; border-radius: 12px; }
+.research-project-demos figcaption { margin-top: 6px; }
+@media (max-width: 440px) {
+  .research-project-demos { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body><header><nav aria-label="Main navigation"><b style="display:flex;align-items:center;gap:22px;margin-right:auto"><a href="index.html"><img src="site-icon.svg?v=2" alt="" width="36" height="36" style="display:block"></a><span>Thomas Lee</span></b><a href="index.html">Home</a><a aria-current="page" href="research.html">Research</a><a href="projects.html">Projects</a><a href="publications.html">Publications</a></nav></header><main><div class="sub research-projects"><h1>Research</h1>
@@ -27,7 +39,29 @@
 </article>
 <article class="row">
   <h3>Closed-Loop-Compliant Reinforcement Learning</h3>
-  <p>A robot holding a tool may need to yield at its elbow when pushed while keeping its hand on target. I post-train an existing policy using paired simulations that start from the same state, with an external force applied to one robot. The difference between their task-space motions isolates the response to the force. I train a residual policy over the frozen base policy to match that response to a virtual mass–spring–damper model, which specifies how the robot should yield and recover after release. I use the resulting method to study how robots can accommodate contact while retaining their original skills.</p>
+  <div>
+  <p class="research-project-summary">This project investigates how to give an existing robot policy a tunable response to external forces while preserving its nominal behavior. We compare paired rollouts from the same initial state to isolate force-induced task-space motion. We train a residual over the frozen policy so that this motion tracks a virtual mass–spring–damper response, with fixed low-level gains.</p>
+  <p class="research-project-summary">In Isaac Lab, a 30 N trunk push displaced the post-trained Go2 by 14.0 cm against a 14.8 cm reference, compared with 2.1 cm for the base policy. On a Franka reaching task, post-training reduced compliance tracking error under a 15 N hand push from 6.1 cm to 1.06 cm, with nominal tracking error near 1 cm. We also demonstrate elbow yielding while maintaining the hand target and G1 locomotion under 50 N palm pulls.</p>
+  <p class="research-project-summary">We are investigating how to specify compliant responses that respect task constraints and whether the same post-training objective can shape skills learned by vision-language-action policies.</p>
+  <div class="research-project-demos">
+    <figure>
+      <img src="clc-go2-trunk.gif" width="480" height="382" alt="Unitree Go2 yielding to a push on its trunk" loading="lazy" decoding="async">
+      <figcaption>Go2 trunk push</figcaption>
+    </figure>
+    <figure>
+      <img src="clc-franka-hand.gif" width="480" height="428" alt="Franka arm yielding to a push at its hand" loading="lazy" decoding="async">
+      <figcaption>Franka hand push</figcaption>
+    </figure>
+    <figure>
+      <img src="clc-franka-elbow.gif" width="480" height="428" alt="Franka arm yielding at the elbow while holding the hand near its target" loading="lazy" decoding="async">
+      <figcaption>Franka elbow compliance in the null space</figcaption>
+    </figure>
+    <figure>
+      <img src="clc-g1-palms.gif" width="384" height="432" alt="Unitree G1 walking under external pulls at the palms" loading="lazy" decoding="async">
+      <figcaption>G1 palm pulls at 50 N</figcaption>
+    </figure>
+  </div>
+  </div>
 </article>
 <article class="row"><h3>Forlax</h3></article>
 </div></main><footer>Thomas Chun Fai Lee · Carnegie Mellon University<a href="mailto:chunfai2@andrew.cmu.edu">Email</a></footer></body></html>
