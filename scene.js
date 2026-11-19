@@ -74,6 +74,7 @@ function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
 }
 let target, nextTarget;
+let predictionLanded=false;
 function footfall(a,leg){
   const p=route(a);
   return {...p,y:p.y+.018*leg};
@@ -145,6 +146,7 @@ function advance(dt){
   Object.assign(robot,route(angle));
   robot.phase+=amount;
   if(robot.phase>=1){
+    predictionLanded=true;
     robot.phase-=1;
     if(humanPause.pending){robot.phase=0;stand(humanPause);}
     trailing=planted;planted=target;target=nextTarget;side*=-1;
@@ -383,10 +385,8 @@ function draw(){
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
   ctx.save();
-  // The dashed humanoid previews the next landing from the foothold the solid humanoid is approaching.
-  // The solid humanoid follows the previous prediction from its current trailing foot.
-  drawSwing(target,nextTarget,robot.phase,"hsl(11 23% 31% / .72)");
-  drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)");
+  // Reveal the solid humanoid's foothold path after the dashed prediction lands.
+  if(predictionLanded)drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)");
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   drawQuadruped(true);
   drawQuadruped();
