@@ -51,24 +51,40 @@
 .world-model-icon{position:relative;isolation:isolate}
 .world-model-icon svg{position:relative;display:block;width:100%;height:auto;margin-bottom:18px}
 .world-model-icon{container-type:inline-size;padding-top:18px;padding-bottom:12px}
+.world-model-icon:has(.skill-bubbles){
+  width:min(100%,460px);padding:0;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,44%) minmax(0,1fr);
+  align-items:center;
+}
+.world-model-icon:has(.skill-bubbles) svg{
+  grid-column:2;grid-row:1;margin:0;z-index:1;
+}
 .skill-bubbles{
-  position:absolute;inset:0 -5% calc(29px + 6%);z-index:-1;
-  display:flex;flex-wrap:wrap;align-content:space-evenly;justify-content:center;gap:12px 8px;
-  list-style:none;padding:0;margin:0;pointer-events:none;
+  display:contents;list-style:none;padding:0;margin:0;pointer-events:none;
 }
 .skill-bubbles li{
-  flex:0 0 auto;
-  padding:.22em .55em;border:1px solid #b9cabe;border-radius:999px;
-  background:#f1f4ed;color:#496658;font:clamp(8px,3.25cqw,11px)/1.3 monospace;
-  white-space:nowrap;
+  width:fit-content;max-width:calc(100% + 8px);padding:.2em .5em;
+  border:1px solid #b9cabe;border-radius:999px;
+  background:#f1f4ed;color:#496658;font:clamp(9px,2.35cqw,11px)/1.2 monospace;
+  text-align:center;overflow-wrap:anywhere;
 }
-.skill-bubbles li:nth-child(5n+1){translate:0 -4px}
-.skill-bubbles li:nth-child(5n+2){translate:0 3px}
-.skill-bubbles li:nth-child(5n+3){translate:0 -1px}
-.skill-bubbles li:nth-child(5n+4){translate:0 5px}
-.skill-bubbles li:nth-child(5n){translate:0 -3px}
+.skill-bubbles li:nth-child(odd){align-self:flex-end}
+.skill-bubbles li:nth-child(4n+1){align-self:flex-start}
+.skill-bank{
+  list-style:none;padding:0;margin:0;
+  grid-row:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:space-evenly;gap:4px;min-width:0;
+}
+.skill-bank:first-of-type{grid-column:1;margin-right:-5px}
+.skill-bank:last-of-type{grid-column:3;margin-left:-5px}
+.world-model-icon:has(.skill-bubbles) figcaption{
+  grid-column:1/-1;grid-row:2;top:0;left:0;margin-top:7px;
+}
+@media(min-width:1050px){
+  .about-demo-row{grid-template-columns:minmax(0,1fr) minmax(360px,42%);gap:5%}
+}
 @media(max-width:700px){
-  .world-model-icon:has(.skill-bubbles){width:min(96%,310px)}
+  .world-model-icon:has(.skill-bubbles){width:min(100%,460px);justify-self:center}
 }
 .world-model-icon figcaption,.terrain .terrain-cue{font:11px/1.4 monospace}
 .world-model-icon figcaption{margin-top:0;text-align:right;position:relative;top:-14px;left:10px}
@@ -103,26 +119,10 @@
   <p>I work at the intersection of reinforcement learning and optimal control, with an interest in building world models from robot interaction data and using them to plan and control motion in contact-rich tasks.</p>
 </section>
 <figure class="world-model-icon">
-  <ul class="skill-bubbles" aria-label="Research and technical skills">
-    <li>Reinforcement learning</li>
-    <li>VLA</li>
-    <li>Python</li>
-    <li>World action models</li>
-    <li>Contact-rich manipulation</li>
-    <li>World models</li>
-    <li>Optimal control</li>
-    <li>Imitation learning</li>
-    <li>C++</li>
-    <li>ROS 2</li>
-    <li>Adaptive control</li>
-    <li>Legged locomotion</li>
-    <li>Motion planning</li>
-    <li>Robot hardware</li>
-    <li>Isaac Lab</li>
-    <li>JAX</li>
-    <li>Gazebo</li>
-    <li>Contact modeling</li>
-  </ul>
+  <div class="skill-bubbles" role="group" aria-label="Research and technical skills">
+  <ul class="skill-bank"><li>Reinforcement learning</li><li>Python</li><li>Contact-rich manipulation</li><li>Optimal control</li><li>C++</li><li>Adaptive control</li><li>Motion planning</li><li>Isaac Lab</li><li>Gazebo</li></ul>
+  <ul class="skill-bank"><li>VLA</li><li>World action models</li><li>World models</li><li>Imitation learning</li><li>ROS 2</li><li>Legged locomotion</li><li>Robot hardware</li><li>JAX</li><li>Contact modeling</li></ul>
+  </div>
   <svg viewBox="14 -13 208 163" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Robotic arm holding a globe">
     <defs>
       <linearGradient id="arm-metal" x2=".85" y2="1" gradientUnits="objectBoundingBox">
