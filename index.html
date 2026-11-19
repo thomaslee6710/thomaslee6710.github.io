@@ -307,7 +307,7 @@
     const gap = about.querySelector('h2').getBoundingClientRect().top - resumeBottom;
     const textBottom = about.lastElementChild.getBoundingClientRect().bottom;
     const captionInset = parseFloat(getComputedStyle(terrain.querySelector('.terrain-copy')).paddingTop);
-    const space = Math.max(0, gap + textBottom - terrain.getBoundingClientRect().top - captionInset - 32);
+    const space = Math.max(0, gap + textBottom - terrain.getBoundingClientRect().top - captionInset - 8);
     terrain.style.setProperty('--terrain-space', space + 'px');
   }
   const spacingObserver = new ResizeObserver(alignSectionGaps);
