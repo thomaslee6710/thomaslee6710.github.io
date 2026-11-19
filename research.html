@@ -1,5 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Research · Thomas Chun Fai Lee</title><link rel="icon" type="image/svg+xml" href="site-icon.svg?v=2"><link rel="stylesheet" href="style.css?v=footer-right-links"><style>
+.research-projects { --research-content-inset: clamp(16px, 2.2vw, 28px); }
+.research-projects > h1 { padding-inline-start: var(--research-content-inset); }
 .research-projects > .row {
   align-items: start;
   padding-block: clamp(40px, 6vw, 88px);
@@ -41,7 +43,7 @@
 
 .research-projects > .row {
   border-radius: 8px 8px 14px 14px;
-  padding-inline: clamp(16px, 2.2vw, 28px);
+  padding-inline: var(--research-content-inset);
   transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
 .research-projects > .row { position: relative; isolation: isolate; }
