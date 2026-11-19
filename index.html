@@ -98,6 +98,13 @@
 .visitor-map{width:100%;max-width:1250px;margin:0 auto 54px;padding:0 5vw}
 .visitor-map h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 14px}
 .visitor-map .visitor-widget{box-sizing:border-box;width:100%;max-width:calc(1000px + 2 * clamp(8px,1.4vw,18px) + 2px);padding:clamp(8px,1.4vw,18px);overflow:hidden;border:1px solid #c5d2c5;border-radius:12px;background:#fbfaf6}
+/* The widget fits its Miller-projection pin layer inside this same rectangle. */
+.visitor-map .mapmyvisitors-map{
+  background-image:url("visitor-land-miller.svg") !important;
+  background-size:contain;
+  background-position:center;
+  background-repeat:no-repeat;
+}
 .visitor-map #mapmyvisitors-widget .mapmyvisitors-bottom-text{background:#e6eee4;color:#1d392a;border-color:#c5d2c5;text-shadow:none;font-family:monospace}
 .visitor-map{container-type:inline-size}
 .visitor-map p{font:min(11px,2.4cqi)/1.4 monospace;margin:8px 0 0;white-space:nowrap}
