@@ -17,33 +17,33 @@
   <article class="project-card">
     <iframe class="project-media project-media--embed" src="https://www.youtube-nocookie.com/embed/kSXKjTxKpuA" title="Quad-SDK demonstration" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     <h3>Quad-SDK</h3>
-    <p>Quad-SDK is an open-source ROS framework for quadruped locomotion developed at CMU’s Robomechanics Lab. It integrates planning, control, and state estimation, with shared interfaces for simulation and hardware. I contributed to ROS 2 integration for Unitree platforms and a C++ runtime for deploying learned locomotion policies.</p>
+    <p>I developed a C++ runtime for deploying learned locomotion policies in Quad-SDK and contributed ROS 2 integration for Unitree quadrupeds. The runtime plugs learned controllers into the stack’s shared simulation and hardware interfaces, enabling matched-command comparisons with Unitree’s stock controller.</p>
     <p><a href="https://www.youtube.com/watch?v=kSXKjTxKpuA">Watch on YouTube</a></p>
   </article>
   <article class="project-card">
     <img class="project-media" src="project-underbrush.jpg" alt="A Unitree Go2 traversing outdoor ivy" loading="lazy">
     <h3>Recovering a caught leg</h3>
-    <p>I led hardware evaluation of a quadruped policy that learns to escape entanglements. I compared contact estimates decoded from each leg’s latent representation with video of the moment a cord caught and released it, then tested recovery in natural vegetation.</p>
+    <p>I led hardware validation of a learned disentanglement policy on the Unitree Go2, from controlled bungee entanglements to outdoor trials in natural underbrush. By aligning video with contact estimates decoded from each leg’s recurrent latent state, I verified that the policy tracked which leg was caught and when it was released.</p>
   </article>
   <article class="project-card">
     <img class="project-media project-media--plot" src="project-beam-duty-factor.png" alt="Selected duty factor increases as the stance narrows for both walking and trotting" loading="lazy">
     <h3>Balancing on a narrow beam</h3>
-    <p>I designed gait policies and a selector for duty factor, the fraction of each stride a foot spends on the ground. Across 45 hardware trials on a 15 cm beam, we studied how contact duration affected crossing success using centroidal MPC without dedicated balance actuation.</p>
+    <p>I designed a duty-factor selector that maps beam width and motion commands to stance duration. Across 45 Unitree Go2 trials on a 15 cm beam, we evaluated how stance duration affected crossing success under centroidal model predictive control without dedicated balance actuation.</p>
   </article>
   <article class="project-card">
     <div class="project-media project-media--pending">Photo or video forthcoming</div>
     <h3>5-DOF Palletizing Robot</h3>
-    <p>Built a five-axis arm with a suction end effector and a ROS 2 software stack for picking and stacking cartons.</p>
+    <p>I built a custom five-axis arm and integrated a suction end effector with a ROS 2 software stack. The system uses OpenCV-based perception and coordinated arm motion to pick and stack cartons.</p>
   </article>
   <article class="project-card">
     <div class="project-media project-media--pending">Photo or video forthcoming</div>
     <h3>Omnidirectional Palletizing Platform</h3>
-    <p>Prototyped a mobile base for palletizing and tested vacuum hardware for lifting and stacking boxes.</p>
+    <p>I prototyped an omnidirectional mobile base for palletizing, integrating LiDAR, cameras, and an IMU for mobile operation. I also evaluated vacuum hardware for lifting and stacking cartons.</p>
   </article>
   <article class="project-card">
     <div class="project-media project-media--pending">Photo or video forthcoming</div>
     <h3>Urban Search and Rescue Robot</h3>
-    <p>Built a teleoperated robot for navigating rubble, with inverse kinematics for mobile manipulation and computer vision for object detection.</p>
+    <p>I built a teleoperated mobile manipulator for search and rescue in rubble. I implemented inverse kinematics for arm control and a vision pipeline using image segmentation and flood fill to detect objects.</p>
   </article>
 </div>
 </div></main><footer><span>Thomas Chun Fai Lee · Carnegie Mellon University</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer></body></html>
