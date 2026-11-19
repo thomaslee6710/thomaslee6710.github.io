@@ -23,21 +23,31 @@
   padding-inline: clamp(14px, 1.5vw, 20px);
   transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
-.project-card:focus-within {
+.project-card { position: relative; isolation: isolate; }
+.project-card::before {
+  content: "";
+  position: absolute;
+  inset-block: -8px;
+  inset-inline: calc(-1 * clamp(12px, 1.5vw, 20px));
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
   background-color: #edf2eb;
-  box-shadow: 0 0 0 8px #edf2eb;
+  opacity: 0;
+  transition: opacity 180ms ease;
 }
+.project-card:focus-within::before { opacity: 1; }
 .project-card:focus-within h3 { color: #285c43; }
 @media (hover: hover) and (pointer: fine) {
   .project-card:hover {
     transform: translateY(-3px);
-    background-color: #edf2eb;
-    box-shadow: 0 0 0 8px #edf2eb, 0 8px 18px 4px rgb(30 62 45 / 10%);
+
   }
+  .project-card:hover::before { opacity: 1; box-shadow: 0 8px 18px rgb(30 62 45 / 10%); }
   .project-card:hover h3 { color: #285c43; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .project-card { transition: none; }
+  .project-card, .project-card::before { transition: none; }
   .project-card:hover { transform: none; }
 }
 </style>
