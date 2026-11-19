@@ -51,6 +51,11 @@
 #spin-globe:active{cursor:grabbing}
 #spin-globe:focus:not(:focus-visible){outline:none}
 #spin-globe:focus-visible{outline:2px solid #749180;outline-offset:4px}
+.home-news{max-width:1250px;margin:clamp(16px,4vw,44px) auto 54px;padding:0 5vw}
+.home-news h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 14px}
+.home-news ul{list-style:none;padding:0;margin:0;max-width:76ch}
+.home-news li{display:grid;grid-template-columns:8.5ch minmax(0,1fr);gap:18px;padding:10px 0;font-size:15px}
+.home-news time{font-family:monospace;font-size:13px}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
 <main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I want to study how robots can use limited data from physically interacting with the world to decide how to act in unstructured environments.</p><a class="worklink" href="resume.pdf">Résumé <span aria-hidden="true">↗</span></a></div><div class="portrait-frame"><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></div></section>
@@ -108,7 +113,17 @@
 </figure>
 </div>
 <section class="terrain" aria-labelledby="demo-title">
-<div class="terrain-copy"><div class="terrain-caption"><h2 id="demo-title">Predicting next step</h2><p>Drag the terrain up or down to see how the robots’ predicted steps change.</p></div></div><div class="mesh-strip"><canvas id="page-mesh" tabindex="0" aria-label="Drag up or down to shape the ground at each spot. Left and right arrows move the brush; up and down sculpt. The dashed humanoid predicts the next stride."></canvas><canvas id="walker" aria-hidden="true"></canvas></div></section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer><script>
+<div class="terrain-copy"><div class="terrain-caption"><h2 id="demo-title">Predicting next step</h2><p>Drag the terrain up or down to see how the robots’ predicted steps change.</p></div></div><div class="mesh-strip"><canvas id="page-mesh" tabindex="0" aria-label="Drag up or down to shape the ground at each spot. Left and right arrows move the brush; up and down sculpt. The dashed humanoid predicts the next stride."></canvas><canvas id="walker" aria-hidden="true"></canvas></div></section><section class="home-news" aria-labelledby="news-title">
+  <h2 id="news-title">Recent news</h2>
+  <ul>
+    <li><time datetime="2026-10">Oct 2026</time><span>Co-authored “Reduced-Order Modeling for Adaptive Legged Locomotion through Mud,” a <a href="https://sim2realgap.github.io/sim2real-and-control-workshop-iros2026/">workshop abstract at IROS 2026</a>.</span></li>
+    <li><time datetime="2026-09">Sep 2026</time><span>Our preprint “Duty Factor Predicts Robust Constrained Quadrupedal Locomotion Across Gait Types” is <a href="https://arxiv.org/abs/2609.22073">on arXiv</a>.</span></li>
+    <li><time datetime="2025">2025</time><span>Joined the M.S. in Robotics program at Carnegie Mellon University.</span></li>
+    <li><time datetime="2025-05">May 2025</time><span>Graduated from Carnegie Mellon with a B.S. in Mechanical Engineering, an additional major in Robotics, and a minor in Business Administration.</span></li>
+    <li><time datetime="2021">2021</time><span>Started my undergraduate studies at Carnegie Mellon University.</span></li>
+    <li><time datetime="2019">2019</time><span>Published work for the American Geophysical Union conference and received an ISF Academy scholarship to attend and present it. <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></span></li>
+  </ul>
+</section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer><script>
 (() => {
   const globe = document.querySelector('#spin-globe');
   const grid = document.querySelector('#globe-meridians');
