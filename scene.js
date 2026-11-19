@@ -376,16 +376,16 @@ function draw(){
   ctx.drawImage(grid,0,-headroom,width,height+headroom);
   const preview=interpolateFoot(target,nextTarget,robot.phase);
   const fy=height*(.14+.72*preview.y+drop*forecast.depth);
-  const ghostSwing=interpolateFoot(planted,nextTarget,robot.phase);
+  const ghostSwing=interpolateFoot(target,nextTarget,robot.phase);
   const ghostFeet=[[target.x*width,projectY(target.x,target.y)],
-    [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-swingLift(planted,nextTarget,robot.phase)]];
+    [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-swingLift(target,nextTarget,robot.phase)]];
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*43;
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
   ctx.save();
-  // Render only the remaining swing, from the lifted foot to touchdown.
-  // The stance leg's next swing starts after the current leg touches down.
-  drawSwing(planted,nextTarget,0,"hsl(11 23% 31% / .72)");
+  // The dashed humanoid previews the next landing from the foothold the solid humanoid is approaching.
+  // The solid humanoid follows the previous prediction from its current trailing foot.
+  drawSwing(target,nextTarget,robot.phase,"hsl(11 23% 31% / .72)");
   drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)");
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   drawQuadruped(true);
