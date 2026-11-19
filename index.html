@@ -68,7 +68,7 @@
   <p>I work at the intersection of reinforcement learning and optimal control, with an interest in building world models from robot interaction data and using them to plan and control motion in contact-rich tasks.</p>
 </section>
 <figure class="world-model-icon">
-  <svg viewBox="14 0 181 150" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Robotic arm holding a globe">
+  <svg viewBox="14 -13 208 163" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Robotic arm holding a globe">
     <defs>
       <linearGradient id="arm-metal" x2=".85" y2="1" gradientUnits="objectBoundingBox">
         <stop stop-color="#dce8d9"/><stop offset=".44" stop-color="#9ebaac"/><stop offset="1" stop-color="#527968"/>
@@ -88,14 +88,15 @@
         <stop offset="1" stop-color="#294e40" stop-opacity=".42"/>
       </radialGradient>
     </defs>
-    <path aria-hidden="true" pointer-events="none" vector-effect="non-scaling-stroke"
-      style="stroke-width:.75px" stroke="#638474" stroke-dasharray="3 4" opacity=".72"
-      d="M109 23h71v68h-71z M121 10h71v68h-71z M109 23l12-13m59 13 12-13m-12 81 12-13m-83 13 12-13"/>
+    <path id="cube-back" aria-hidden="true" pointer-events="none" vector-effect="non-scaling-stroke"
+      style="stroke-width:.75px" stroke="#638474" stroke-dasharray="3 4" opacity=".48"/>
     <g id="spin-globe" tabindex="0" role="group" aria-label="Rotatable globe. Drag in any direction or use the arrow keys.">
       <circle cx="151" cy="49" r="32" fill="url(#globe-surface)" stroke="#41634f" stroke-width="1.5"/>
       <path id="globe-meridians" stroke="url(#globe-grid)" stroke-width="1.25" d="M151 17v64 M151 17a16 32 0 0 1 0 64 M151 17a16 32 0 0 0 0 64"/>
       <path d="M126 39a27 27 0 0 1 15-15" stroke="#f3faed" stroke-width="2.5" opacity=".63" pointer-events="none"/>
     </g>
+    <path id="cube-front" aria-hidden="true" pointer-events="none" vector-effect="non-scaling-stroke"
+      style="stroke-width:.75px" stroke="#638474" stroke-dasharray="3 4" opacity=".87"/>
     <g pointer-events="none">
       <ellipse cx="62" cy="138" rx="36" ry="5" fill="#41634f" opacity=".12" stroke="none"/>
       <path d="M34 129v8c0 4 56 4 56 0v-8" fill="#648675"/>
@@ -144,6 +145,15 @@
   const globe = document.querySelector('#spin-globe');
   const grid = document.querySelector('#globe-meridians');
   const basis = [[1,0,0],[0,1,0],[0,0,1]];
+  const cubeBack = document.querySelector('#cube-back');
+  const cubeFront = document.querySelector('#cube-front');
+  const cubeVertices = Array.from({length:8}, (_,i) => {
+    const x=i&1?1.07:-1.07, y=i&2?1.07:-1.07, z=i&4?1.07:-1.07;
+    const u=x*.94+z*.342, w=z*.94-x*.342;
+    return [u,y*.966-w*.259,y*.259+w*.966];
+  });
+  const cubeEdges = cubeVertices.flatMap((_,i) =>
+    [1,2,4].filter(bit=>!(i&bit)).map(bit=>[i,i|bit]));
   const lines = [];
   for (let longitude = 0; longitude < 8; longitude++) {
     const theta = longitude * Math.PI / 4;
@@ -180,6 +190,23 @@
       }
     }
     grid.setAttribute('d', path.join(' '));
+    const vertices=cubeVertices.map(vertex=>basis[0].map((_,i)=>
+      vertex[0]*basis[0][i]+vertex[1]*basis[1][i]+vertex[2]*basis[2][i]));
+    const front=[],back=[];
+    for(const [i,j] of cubeEdges){
+      const a=vertices[i],b=vertices[j];
+      const aFront=a[2]>=0,bFront=b[2]>=0;
+      if(aFront===bFront){
+        (aFront?front:back).push('M'+point(a)+'L'+point(b));
+      }else{
+        const t=a[2]/(a[2]-b[2]);
+        const edge=a.map((value,k)=>value+t*(b[k]-value));
+        (aFront?front:back).push('M'+point(a)+'L'+point(edge));
+        (bFront?front:back).push('M'+point(edge)+'L'+point(b));
+      }
+    }
+    cubeFront.setAttribute('d',front.join(' '));
+    cubeBack.setAttribute('d',back.join(' '));
   }
 
   function rotate(dx,dy) {
