@@ -90,6 +90,7 @@
     </defs>
     <path id="cube-back" aria-hidden="true" pointer-events="none" vector-effect="non-scaling-stroke"
       style="stroke-width:.75px" stroke="#638474" stroke-dasharray="3 4" opacity=".48"/>
+    <path id="cube-back-corners" aria-hidden="true" pointer-events="none" vector-effect="non-scaling-stroke" style="stroke-width:1.55px" stroke="#638474" opacity=".58"/>
     <g id="spin-globe" tabindex="0" role="group" aria-label="Rotatable globe. Drag in any direction or use the arrow keys.">
       <circle cx="151" cy="49" r="32" fill="url(#globe-surface)" stroke="#41634f" stroke-width="1.5"/>
       <path id="globe-meridians" stroke="url(#globe-grid)" stroke-width="1.25" d="M151 17v64 M151 17a16 32 0 0 1 0 64 M151 17a16 32 0 0 0 0 64"/>
@@ -97,6 +98,7 @@
     </g>
     <path id="cube-front" aria-hidden="true" pointer-events="none" vector-effect="non-scaling-stroke"
       style="stroke-width:.75px" stroke="#638474" stroke-dasharray="3 4" opacity=".87"/>
+    <path id="cube-front-corners" aria-hidden="true" pointer-events="none" vector-effect="non-scaling-stroke" style="stroke-width:1.55px" stroke="#638474" opacity=".94"/>
     <g pointer-events="none">
       <ellipse cx="62" cy="138" rx="36" ry="5" fill="#41634f" opacity=".12" stroke="none"/>
       <path d="M34 129v8c0 4 56 4 56 0v-8" fill="#648675"/>
@@ -207,6 +209,15 @@
     }
     cubeFront.setAttribute('d',front.join(' '));
     cubeBack.setAttribute('d',back.join(' '));
+    const corners={front:[],back:[]};
+    for(const [i,j] of cubeEdges){
+      for(const [a,b] of [[vertices[i],vertices[j]],[vertices[j],vertices[i]]]){
+        const stub=a.map((value,k)=>value+.095*(b[k]-value));
+        corners[a[2]>=0?'front':'back'].push('M'+point(a)+'L'+point(stub));
+      }
+    }
+    for(const side of ['front','back'])
+      document.querySelector('#cube-'+side+'-corners').setAttribute('d',corners[side].join(' '));
   }
 
   function rotate(dx,dy) {
