@@ -72,21 +72,26 @@
         <stop stop-color="#eef4e9"/><stop offset="1" stop-color="#6c9482"/>
       </radialGradient>
       <radialGradient id="globe-surface" cx="32%" cy="27%" r="82%" fx="27%" fy="23%">
-        <stop stop-color="#f6fbef"/>
-        <stop offset=".42" stop-color="#c7dbca"/>
-        <stop offset=".77" stop-color="#88ae9a"/>
-        <stop offset=".94" stop-color="#507969"/>
-        <stop offset="1" stop-color="#3d6356"/>
+        <stop stop-color="#f1f7ed"/>
+        <stop offset=".42" stop-color="#d5e4d8"/>
+        <stop offset=".77" stop-color="#bdd3c5"/>
+        <stop offset=".94" stop-color="#9ab8a8"/>
+        <stop offset="1" stop-color="#87a898"/>
       </radialGradient>
       <radialGradient id="globe-grid" gradientUnits="userSpaceOnUse" cx="151" cy="46" r="32">
-        <stop offset=".32" stop-color="#365d4c" stop-opacity=".83"/>
-        <stop offset="1" stop-color="#294e40" stop-opacity=".42"/>
+        <stop offset=".32" stop-color="#537a68" stop-opacity=".83"/>
+        <stop offset="1" stop-color="#729485" stop-opacity=".42"/>
       </radialGradient>
     </defs>
     <g id="spin-globe" tabindex="0" role="group" aria-label="Rotatable globe. Drag in any direction or use the arrow keys.">
-      <circle cx="151" cy="49" r="32" fill="url(#globe-surface)" stroke="#41634f" stroke-width="1.5"/>
+      <circle cx="151" cy="49" r="32" fill="url(#globe-surface)" stroke="#729485" stroke-width="1.5"/>
       <path id="globe-meridians" stroke="url(#globe-grid)" stroke-width="1.25" d="M151 17v64 M151 17a16 32 0 0 1 0 64 M151 17a16 32 0 0 0 0 64"/>
       <path d="M126 39a27 27 0 0 1 15-15" stroke="#f3faed" stroke-width="2.5" opacity=".63" pointer-events="none"/>
+    </g>
+    <g id="arm-mount" aria-hidden="true">
+      <ellipse cx="95" cy="164" rx="24" ry="5" fill="#dbe9de" stroke="none"/>
+      <rect x="74" y="151" width="42" height="11" rx="5.5" fill="#9ab8a8" stroke="#7a9d8b"/>
+      <rect x="77" y="148" width="36" height="9" rx="4.5" fill="#c5d9cb" stroke="#87a898"/>
     </g>
     <g id="arm-links">
       <g data-arm-link="0"><line stroke="#87a898" stroke-width="17"/><line stroke="#c5d9cb" stroke-width="11"/></g>
@@ -110,7 +115,8 @@
   const grid = document.querySelector('#globe-meridians');
   const scene = document.querySelector('#arm-scene');
   const basis = [[1,0,0],[0,1,0],[0,0,1]];
-  const armBasis = [[1,0,0],[0,1,0],[0,0,1]];
+  let armBasis = [[1,0,0],[0,1,0],[0,0,1]];
+  let yaw=0,pitch=0;
   const nodes = [[-42,46,0],[-21,-1,0],[29,29,0],[-42,59,0],[17,22,-12],[13,8,-16],[42,24,12],[53,12,17]];
   const pairs = [[0,1],[1,2],[3,0],[2,4],[4,5],[2,6],[6,7]];
   const links = [...scene.querySelectorAll('[data-arm-link]')];
@@ -120,21 +126,24 @@
       vertex[0]*matrix[0][i]+vertex[1]*matrix[1][i]+vertex[2]*matrix[2][i]);
   }
   function renderArm() {
-    const projected=nodes.map(vertex=>project(armBasis,vertex));
-    const [gx,gy,gz]=project(armBasis,[30,-15,0]);
-    globe.setAttribute('transform','translate('+(95+gx-151)+' '+(95+gy-49)+')');
+    const local = ([x,y,z]) => project(armBasis,[x+42,y-46,z]);
+    const projected=nodes.map(local);
+    const [gx,gy,gz]=local([30,-15,0]);
+    const scale=.69;
+    const screenX=x=>95+scale*x,screenY=y=>146+scale*y;
+    globe.setAttribute('transform','translate('+screenX(gx)+' '+screenY(gy)+') scale('+scale+') translate(-151 -49)');
     const layers=[{node:globe,z:gz}];
     for (const [i,[a,b]] of pairs.entries()) {
       const [x1,y1,z1]=projected[a], [x2,y2,z2]=projected[b];
       for (const line of links[i].children) {
-        for (const [name,value] of Object.entries({x1:95+x1,y1:95+y1,x2:95+x2,y2:95+y2}))
+        for (const [name,value] of Object.entries({x1:screenX(x1),y1:screenY(y1),x2:screenX(x2),y2:screenY(y2)}))
           line.setAttribute(name,value);
       }
       layers.push({node:links[i],z:(z1+z2)/2});
     }
     joints.forEach((node,i)=>{
       const [x,y,z]=projected[i];
-      node.setAttribute('cx',95+x);node.setAttribute('cy',95+y);
+      node.setAttribute('cx',screenX(x));node.setAttribute('cy',screenY(y));
       layers.push({node,z:z+.05});
     });
     layers.sort((a,b)=>a.z-b.z);
@@ -164,8 +173,7 @@
     for (const line of lines) {
       let previous = null;
       for (const vertex of line) {
-        const current = basis[0].map((_, i) =>
-          vertex[0]*basis[0][i]+vertex[1]*basis[1][i]+vertex[2]*basis[2][i]);
+        const current = project(armBasis,project(basis,vertex));
         if (previous && (previous[2] >= 0)!==(current[2] >= 0)) {
           const t = previous[2]/(previous[2]-current[2]);
           const edge = previous.map((v,i) => v+t*(current[i]-v));
@@ -181,16 +189,22 @@
   function rotate(dx,dy,wholeArm=false) {
     const distance = Math.hypot(dx,dy);
     if (!distance) return;
-    const ax = -dy/distance, ay = dx/distance;
-    const angle = distance * .038;
-    const c = Math.cos(angle), s = Math.sin(angle);
-    const matrices=wholeArm?[armBasis,basis]:[basis];
-    for (const matrix of matrices) for (let i=0;i<matrix.length;i++) {
-      const [x,y,z]=matrix[i];
-      const along = (ax*x+ay*y)*(1-c);
-      matrix[i] = [x*c+ay*z*s+ax*along, y*c-ax*z*s+ay*along, z*c+(ax*y-ay*x)*s];
+    if (wholeArm) {
+      yaw=(yaw+dx*.028)%(2*Math.PI);
+      pitch=Math.max(-.58,Math.min(.58,pitch-dy*.018));
+      const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+      armBasis=[[cy,sy*sp,-sy*cp],[0,cp,sp],[sy,-cy*sp,cy*cp]];
+      renderArm();
+    } else {
+      const axis=[-dy/distance,dx/distance,0];
+      const [ax,ay,az]=armBasis.map(v=>v[0]*axis[0]+v[1]*axis[1]);
+      const angle=distance*.038,c=Math.cos(angle),s=Math.sin(angle);
+      for(let i=0;i<basis.length;i++){
+        const [x,y,z]=basis[i];
+        const along=(ax*x+ay*y+az*z)*(1-c);
+        basis[i]=[x*c+(ay*z-az*y)*s+ax*along,y*c+(az*x-ax*z)*s+ay*along,z*c+(ax*y-ay*x)*s+az*along];
+      }
     }
-    if(wholeArm)renderArm();
     render();
   }
 
