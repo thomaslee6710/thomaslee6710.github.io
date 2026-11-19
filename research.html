@@ -51,8 +51,8 @@
 <article class="row">
   <h3>Closed-Loop-Compliant Reinforcement Learning</h3>
   <div>
-  <p class="research-project-summary">This project investigates how to give an existing robot policy a tunable response to external forces while preserving its nominal behavior. We compare paired rollouts from the same initial state to isolate force-induced task-space motion. We train a residual over the frozen policy so that this motion tracks a virtual mass–spring–damper response, with fixed low-level gains.</p>
-  <p class="research-project-summary">In Isaac Lab, a 30 N trunk push displaced the post-trained Go2 by 14.0 cm against a 14.8 cm reference, compared with 2.1 cm for the base policy. On a Franka reaching task, post-training reduced compliance tracking error under a 15 N hand push from 6.1 cm to 1.06 cm, with nominal tracking error near 1 cm. We also demonstrate elbow yielding while maintaining the hand target and G1 locomotion under 50 N palm pulls.</p>
+  <p class="research-project-summary">This project investigates how to give an existing robot policy a tunable response to external forces while preserving its nominal behavior. The key idea is to use the policy’s own undisturbed rollout as a moving reference for compliance. A paired rollout under force lets us train a residual policy to match the resulting task-space deviation to a virtual mass–spring–damper response with fixed low-level gains.</p>
+  <p class="research-project-summary">In Isaac Lab, the Go2 yielded at the trunk under pushes and returned to its standing posture after release. The Franka arm yielded at the hand under direct pushes and, in a separate null-space task, yielded at the elbow while keeping the hand near its target. The G1 humanoid maintained locomotion under external pulls at its palms.</p>
   <p class="research-project-summary">We are investigating how to specify compliant responses that respect task constraints and whether the same post-training objective can shape skills learned by vision-language-action policies.</p>
   <div class="research-project-demos">
     <figure>
@@ -69,7 +69,7 @@
     </figure>
     <figure>
       <img src="clc-g1-palms.gif" width="384" height="432" alt="Unitree G1 walking under external pulls at the palms" loading="lazy" decoding="async">
-      <figcaption>G1 palm pulls at 50 N.</figcaption>
+      <figcaption>G1 locomotion under palm pulls.</figcaption>
     </figure>
   </div>
   </div>
