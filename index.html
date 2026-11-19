@@ -31,7 +31,7 @@
 #page-mesh{pointer-events:auto;z-index:0;cursor:grab;touch-action:none}
 .terrain-copy,.terrain-controls{background:transparent}
 #walker{position:absolute;left:0;width:100%;z-index:1;pointer-events:none}
-.terrain-caption{width:fit-content;max-width:100%;padding:17px clamp(18px,3vw,26px);border:1px solid hsl(159 25% 57%);border-radius:14px;background:hsl(160 20% 74%)}
+.terrain-caption{width:fit-content;max-width:100%;padding:17px clamp(18px,3vw,26px);border:2px solid hsl(159 25% 57%);border-radius:14px;background:transparent}
 .terrain-caption h2{font-family:monospace;font-size:15px;font-weight:700;letter-spacing:normal}
 .terrain-caption p{font-family:monospace;font-size:12px;margin-bottom:0}
 .about-demo-row{max-width:1250px;margin:clamp(28px,5vw,56px) auto 0;padding:0 5vw;display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:7%;align-items:end}
@@ -40,11 +40,11 @@
   width:min(334px,calc(100% - var(--portrait-inset) + 24px));
   margin-right:calc(var(--portrait-inset) - 38px);
   justify-self:end;
-  margin-bottom:4px;
+  margin-bottom:-8px;
 }
 .terrain-caption h2{margin:0;line-height:1.3}
 .terrain-caption p{margin-top:6px;line-height:1.5}
-.home .terrain{padding-top:clamp(24px,4vw,52px)}
+.home .terrain{padding-top:clamp(36px,calc(4vw + 12px),64px)}
 @media(max-width:700px){.about-demo-row{grid-template-columns:1fr;gap:16px}.about-demo-row .terrain-caption{width:min(62%,220px);margin:0;justify-self:start}}
 .about-me h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 12px}
 .about-me p{font-size:16px;max-width:72ch;margin:0 0 12px}
