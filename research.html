@@ -94,7 +94,7 @@
     <div class="research-project-tags"><span>Differentiable Simulation</span><span>Contact Simulation</span><span>Sim-to-Real Transfer</span></div>
   </div>
   <div>
-    <p class="research-project-summary">Forlax is a JAX framework for first-order reinforcement learning. It uses gradients through differentiable MuJoCo simulation to train locomotion policies over short rollout horizons. The examples below show two policy evaluation episodes, vertical-axis rotation, and a handstand task.</p>
+    <p class="research-project-summary">Forlax aims to make first-order reinforcement learning practical for contact-rich tasks. It computes policy gradients by backpropagating through short rollouts in differentiable MuJoCo (MJX). Contact transitions can make those gradients unreliable, and differentiating through every solver iteration adds compute cost. Forlax smooths the contact constraints, solves them to convergence, and uses implicit differentiation to compute gradients without unrolling the solver. The simulation gallery below includes vertical-axis rotation and a Unitree Go1 handstand.</p>
     <p class="research-project-summary">My contribution investigates whether increasing contact solver iterations during training improves transfer to quadruped hardware enough to justify the extra simulation cost. Since first-order training is sensitive to low iteration counts, we plan to sweep solver iterations with PPO under otherwise matched training conditions.</p>
     <p class="research-project-summary">On hardware, we are considering stance-phase foot slip as the primary metric, measured by how far each foot slides along the ground while in contact.</p>
     <div class="research-project-demos">
