@@ -74,7 +74,7 @@ function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
 }
 let target, nextTarget;
-let predictionLanded=false;
+const followedFootsteps=[null,null];
 function footfall(a,leg){
   const p=route(a);
   return {...p,y:p.y+.018*leg};
@@ -146,8 +146,8 @@ function advance(dt){
   Object.assign(robot,route(angle));
   robot.phase+=amount;
   if(robot.phase>=1){
-    predictionLanded=true;
     robot.phase-=1;
+    followedFootsteps[side>0?1:0]={from:{...planted},to:{...nextTarget}};
     if(humanPause.pending){robot.phase=0;stand(humanPause);}
     trailing=planted;planted=target;target=nextTarget;side*=-1;
     robot.observed=terrainDepth(planted.x,planted.y);
@@ -378,19 +378,18 @@ function draw(){
   ctx.drawImage(grid,0,-headroom,width,height+headroom);
   const preview=interpolateFoot(target,nextTarget,robot.phase);
   const fy=height*(.14+.72*preview.y+drop*forecast.depth);
-  const ghostSwing=interpolateFoot(target,nextTarget,robot.phase);
+  const ghostSwing=interpolateFoot(planted,nextTarget,robot.phase);
   const ghostFeet=[[target.x*width,projectY(target.x,target.y)],
-    [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-swingLift(target,nextTarget,robot.phase)]];
+    [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-swingLift(planted,nextTarget,robot.phase)]];
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*43;
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
   ctx.save();
-  // Reveal the solid humanoid's foothold path after the dashed prediction lands.
-  if(predictionLanded){
-    drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)");
-    drawSwing(planted,nextTarget,robot.phase,"hsl(11 23% 36% / .72)");
-  }
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
+  // Show only foothold paths that the dashed humanoid has already landed on.
+  for(const path of followedFootsteps){
+    if(path)drawSwing(path.from,path.to,robot.phase,"hsl(11 23% 36%)");
+  }
   drawQuadruped(true);
   drawQuadruped();
   const dog=route(dogAngle);
