@@ -34,13 +34,16 @@
 .terrain-caption{width:fit-content;max-width:100%;padding:15.3px clamp(16.2px,2.7vw,23.4px);border:2px solid hsl(159 25% 57%);border-radius:8px;background:transparent}
 .terrain-caption h2{font-family:monospace;font-size:13.5px;font-weight:700;letter-spacing:normal}
 .terrain-caption p{font-family:monospace;font-size:10.8px;margin-bottom:0}
-.about-demo-row{max-width:1250px;margin:clamp(28px,5vw,56px) auto 0;padding:0 5vw;display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:7%;align-items:end}
-.world-model-icon{width:min(100%,340px);transform:translateX(-15.652%);margin:0;justify-self:center;align-self:center;position:relative;top:14px;color:#41634f}
+.about-demo-row{max-width:1250px;margin:clamp(28px,5vw,56px) auto 0;padding:0 5vw;display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:7%;align-items:start}
+.world-model-icon{width:min(100%,350px);margin:40px 0 0;justify-self:center;align-self:start;color:#41634f}
 .world-model-icon svg{display:block;width:100%;height:auto}
+.world-model-icon svg :is(path,circle,ellipse){vector-effect:non-scaling-stroke;stroke-width:1.15px}
+#spin-globe path{stroke-width:.7px}
+#spin-globe circle{stroke-width:.9px}
 .terrain-caption h2{margin:0;line-height:1.3}
 .terrain-caption p{margin-top:5.4px;line-height:1.5}
 .home .terrain{padding-top:var(--terrain-space,clamp(48px,calc(4vw + 24px),76px))}
-@media(max-width:700px){.about-demo-row{grid-template-columns:1fr;gap:16px}.world-model-icon{width:min(62%,220px);justify-self:start;transform:translateX(-15.652%)}}
+@media(max-width:700px){.about-demo-row{grid-template-columns:1fr;gap:16px}.world-model-icon{width:min(62%,220px);justify-self:start;margin-top:8px}}
 .about-me h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 12px}
 .about-me p{font-size:16px;max-width:72ch;margin:0 0 12px}
 .about-me p:last-child{margin-bottom:0}
@@ -58,7 +61,7 @@
   <p>I work at the intersection of reinforcement learning and optimal control, with an interest in building world models from robot interaction data and using them to plan and control motion in contact-rich tasks.</p>
 </section>
 <figure class="world-model-icon">
-  <svg viewBox="0 0 230 150" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Robotic arm holding a globe">
+  <svg viewBox="14 0 181 150" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Robotic arm holding a globe">
     <defs>
       <linearGradient id="arm-metal" x2=".85" y2="1" gradientUnits="objectBoundingBox">
         <stop stop-color="#dce8d9"/><stop offset=".44" stop-color="#9ebaac"/><stop offset="1" stop-color="#527968"/>
