@@ -386,7 +386,10 @@ function draw(){
   const hip=pelvisY??ground-legLength;
   ctx.save();
   // Reveal the solid humanoid's foothold path after the dashed prediction lands.
-  if(predictionLanded)drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)");
+  if(predictionLanded){
+    drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)");
+    drawSwing(planted,nextTarget,robot.phase,"hsl(11 23% 36% / .72)");
+  }
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   drawQuadruped(true);
   drawQuadruped();
