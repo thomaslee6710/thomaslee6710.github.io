@@ -97,14 +97,15 @@
 .home-news time{font-family:monospace;font-size:13px}
 .visitor-map{width:100%;max-width:1250px;margin:0 auto 54px;padding:0 5vw}
 .visitor-map h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 14px}
-.visitor-map .mapmyvisitors-map{
+.visitor-map .jvectormap-container > svg{
   background-image:url("visitor-land-miller.svg") !important;
   background-size:contain;background-position:center;background-repeat:no-repeat;
 }
 .visitor-map .visitor-widget{box-sizing:border-box;width:100%;padding:clamp(8px,1.4vw,18px);overflow:hidden;border:1px solid #c5d2c5;border-radius:12px;background:#fbfaf6}
 .visitor-map #mapmyvisitors-widget .mapmyvisitors-bottom-text{background:#e6eee4;color:#1d392a;border-color:#c5d2c5;text-shadow:none;font-family:monospace}
-.visitor-map p{font:11px/1.4 monospace;margin:8px 0 0}
-.visitor-map .visitor-unknown-location{display:none}
+.visitor-map{container-type:inline-size}
+.visitor-map p{font:min(11px,2.4cqi)/1.4 monospace;margin:8px 0 0;white-space:nowrap}
+.visitor-map .visitor-offshore-marker{display:none}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
 <main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I want to study how robots can use limited data from physically interacting with the world to decide how to act in unstructured environments.</p><a class="worklink" href="resume.pdf">Résumé <span aria-hidden="true">↗</span></a></div><div class="portrait-outline"><div class="portrait-frame"><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></div></div></section>
@@ -214,40 +215,50 @@
   <div class="visitor-widget">
     <script id="mapmyvisitors" src="https://mapmyvisitors.com/map.js?cl=829987&amp;w=a&amp;t=n&amp;d=SpMxv-E5e4ngMl0aLMOr83hM3_ezLZlg4lKRuWXWtkU&amp;co=fbfaf6&amp;cmo=416b53&amp;cmn=924b45&amp;ct=1d392a" async></script>
   </div>
-  <p>Dots show approximate visitor locations. Map&nbsp;provided&nbsp;by&nbsp;MapMyVisitors.</p>
+  <p>Dots show approximate visitor locations. Map provided by MapMyVisitors.</p>
 </section>
 <script>
-(() => {
+(async () => {
   const widget = document.querySelector('.visitor-widget');
   const mapWidth = 900;
   const mapHeight = 440.70631074413296;
-  // MapMyVisitors places its initial unknown-location marker at 28° N, 68° W.
-  // These are its coordinates in the widget's native Miller map.
-  const unknownX = 250.67949;
-  const unknownY = 212.92250;
+  const response = await fetch('visitor-land-miller.svg');
+  if (!response.ok) return;
+  const svg = new DOMParser().parseFromString(await response.text(), 'image/svg+xml');
+  const land = new Path2D();
+  for (const coast of svg.querySelectorAll('path[d]')) {
+    land.addPath(new Path2D(coast.getAttribute('d')));
+  }
+  const context = document.createElement('canvas').getContext('2d');
+  context.lineWidth = 6;
+  context.lineJoin = 'round';
 
-  function hideUnknownLocation() {
-    const map = widget.querySelector('.jvectormap-container');
-    const marker = map?.querySelector('.jvectormap-marker[data-index="0"][cx][cy]');
-    if (!marker) return;
-
-    const { width, height } = map.getBoundingClientRect();
+  function hideOffshoreMarkers() {
+    const canvas = widget.querySelector('.jvectormap-container > svg');
+    if (!canvas) return;
+    const { width, height } = canvas.getBoundingClientRect();
     const scale = Math.min(width / mapWidth, height / mapHeight);
     if (!scale) return;
+    const left = (width - mapWidth * scale) / 2;
+    const top = (height - mapHeight * scale) / 2;
 
-    const x = (width - mapWidth * scale) / 2 + unknownX * scale;
-    const y = (height - mapHeight * scale) / 2 + unknownY * scale;
-    marker.classList.toggle('visitor-unknown-location',
-      Math.hypot(Number(marker.getAttribute('cx')) - x, Number(marker.getAttribute('cy')) - y) < 0.75);
+    for (const marker of canvas.querySelectorAll('.jvectormap-marker[cx][cy]')) {
+      const x = (Number(marker.getAttribute('cx')) - left) / scale;
+      const y = (Number(marker.getAttribute('cy')) - top) / scale;
+      // Keep coastal dots within a small tolerance for the simplified shoreline.
+      const nearLand = context.isPointInPath(land, x, y, 'evenodd')
+        || context.isPointInStroke(land, x, y);
+      marker.classList.toggle('visitor-offshore-marker', !nearLand);
+    }
   }
 
-  new MutationObserver(hideUnknownLocation).observe(widget, {
+  new MutationObserver(hideOffshoreMarkers).observe(widget, {
     subtree: true,
     childList: true,
     attributes: true,
-    attributeFilter: ['cx', 'cy']
+    attributeFilter: ['cx', 'cy', 'width', 'height']
   });
-  hideUnknownLocation();
+  hideOffshoreMarkers();
 })();
 </script>
 </main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer><script>
