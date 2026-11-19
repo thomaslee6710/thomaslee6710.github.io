@@ -56,7 +56,7 @@
 .world-model-icon svg :is(path,circle,ellipse){vector-effect:non-scaling-stroke;stroke-width:1.15px}
 #spin-globe path{stroke-width:.7px}
 #spin-globe circle{stroke-width:.9px}
-.home .terrain{padding-top:var(--terrain-space,clamp(48px,calc(4vw + 24px),76px))}
+.home .terrain{padding-top:var(--terrain-space,clamp(24px,4vw,52px))}
 @media(max-width:700px){.about-demo-row{grid-template-columns:1fr;gap:16px}.world-model-icon{width:min(62%,220px);justify-self:start;margin-top:0}}
 .about-me h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 12px}
 .about-me p{font-size:16px;max-width:72ch;margin:0 0 12px}
@@ -306,7 +306,7 @@
     const gap = about.querySelector('h2').getBoundingClientRect().top - resumeBottom;
     const textBottom = about.lastElementChild.getBoundingClientRect().bottom;
     const captionInset = parseFloat(getComputedStyle(terrain.querySelector('.terrain-copy')).paddingTop);
-    const space = Math.max(0, gap + textBottom - terrain.getBoundingClientRect().top - captionInset);
+    const space = Math.max(0, gap + textBottom - terrain.getBoundingClientRect().top - captionInset - 24);
     terrain.style.setProperty('--terrain-space', space + 'px');
   }
   const spacingObserver = new ResizeObserver(alignSectionGaps);
