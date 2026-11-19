@@ -66,14 +66,23 @@
       <radialGradient id="arm-pivot" cx=".32" cy=".25" r=".8">
         <stop stop-color="#eef4e9"/><stop offset="1" stop-color="#6c9482"/>
       </radialGradient>
-      <radialGradient id="globe-surface" cx=".32" cy=".28" r=".78">
-        <stop stop-color="#fdfdf7"/><stop offset="1" stop-color="#d0e0d3"/>
+      <radialGradient id="globe-surface" cx="32%" cy="27%" r="82%" fx="27%" fy="23%">
+        <stop stop-color="#f6fbef"/>
+        <stop offset=".42" stop-color="#c7dbca"/>
+        <stop offset=".77" stop-color="#88ae9a"/>
+        <stop offset=".94" stop-color="#507969"/>
+        <stop offset="1" stop-color="#3d6356"/>
+      </radialGradient>
+      <radialGradient id="globe-grid" gradientUnits="userSpaceOnUse" cx="151" cy="46" r="32">
+        <stop offset=".32" stop-color="#365d4c" stop-opacity=".83"/>
+        <stop offset="1" stop-color="#294e40" stop-opacity=".42"/>
       </radialGradient>
     </defs>
     <g id="spin-globe" tabindex="0" role="slider" aria-label="Globe rotation" aria-valuemin="0" aria-valuemax="359" aria-valuenow="0">
-      <circle cx="151" cy="49" r="32" fill="url(#globe-surface)"/>
-      <path id="globe-meridians" stroke-width="1.35" d="M151 17v64 M151 17a16 32 0 0 1 0 64 M151 17a16 32 0 0 0 0 64"/>
-      <path stroke-width="1.35" d="M119 49h64m-57-20q25 15 50 0m-50 40q25-15 50 0"/>
+      <circle cx="151" cy="49" r="32" fill="url(#globe-surface)" stroke="#41634f" stroke-width="1.5"/>
+      <path id="globe-meridians" stroke="url(#globe-grid)" stroke-width="1.25" d="M151 17v64 M151 17a16 32 0 0 1 0 64 M151 17a16 32 0 0 0 0 64"/>
+      <path stroke="url(#globe-grid)" stroke-width="1.25" d="M119 49h64m-57-20q25 15 50 0m-50 40q25-15 50 0"/>
+      <path d="M126 39a27 27 0 0 1 15-15" stroke="#f3faed" stroke-width="2.5" opacity=".63" pointer-events="none"/>
     </g>
     <g pointer-events="none">
       <ellipse cx="62" cy="138" rx="36" ry="5" fill="#41634f" opacity=".12" stroke="none"/>
