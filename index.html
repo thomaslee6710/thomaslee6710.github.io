@@ -88,7 +88,7 @@
 #spin-globe:active{cursor:grabbing}
 #spin-globe:focus:not(:focus-visible){outline:none}
 #spin-globe:focus-visible{outline:2px solid #749180;outline-offset:4px}
-.home-news{max-width:1250px;margin:0 auto 54px;padding:var(--news-space,clamp(16px,3vw,34px)) 5vw}
+.home-news{max-width:1250px;margin:0 auto var(--visitor-map-gap,clamp(16px,3vw,34px));padding:var(--news-space,clamp(16px,3vw,34px)) 5vw 0}
 .home-news h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 14px}
 .home-news-scroll{max-height:320px;max-width:78ch;overflow-y:auto;padding-right:12px}
 .home-news-scroll:focus-visible{outline:1px solid currentColor;outline-offset:4px}
@@ -397,20 +397,23 @@
     if (!desktop.matches) {
       terrain.style.removeProperty('--terrain-space');
       news.style.removeProperty('--news-space');
-      return;
+    } else {
+      const resumeBottom = profile.querySelector('.worklink').getBoundingClientRect().bottom;
+      const gap = about.querySelector('h2').getBoundingClientRect().top - resumeBottom;
+      const textBottom = about.lastElementChild.getBoundingClientRect().bottom;
+      const captionInset = parseFloat(getComputedStyle(terrain.querySelector('.terrain-copy')).paddingTop);
+      const space = Math.max(0, gap + textBottom - terrain.getBoundingClientRect().top - captionInset - 8);
+      terrain.style.setProperty('--terrain-space', space + 'px');
+      const existingGap = news.getBoundingClientRect().top - mesh.getBoundingClientRect().bottom;
+      news.style.setProperty('--news-space', Math.max(0, gap - existingGap) + 'px');
     }
-    const resumeBottom = profile.querySelector('.worklink').getBoundingClientRect().bottom;
-    const gap = about.querySelector('h2').getBoundingClientRect().top - resumeBottom;
-    const textBottom = about.lastElementChild.getBoundingClientRect().bottom;
-    const captionInset = parseFloat(getComputedStyle(terrain.querySelector('.terrain-copy')).paddingTop);
-    const space = Math.max(0, gap + textBottom - terrain.getBoundingClientRect().top - captionInset - 8);
-    terrain.style.setProperty('--terrain-space', space + 'px');
-    const existingGap = news.getBoundingClientRect().top - mesh.getBoundingClientRect().bottom;
-    news.style.setProperty('--news-space', Math.max(0, gap - existingGap) + 'px');
+    const meshToNews = news.querySelector('h2').getBoundingClientRect().top - mesh.getBoundingClientRect().bottom;
+    news.style.setProperty('--visitor-map-gap', Math.max(0, meshToNews) + 'px');
   }
   const spacingObserver = new ResizeObserver(alignSectionGaps);
   spacingObserver.observe(profile);
   spacingObserver.observe(mesh);
+  spacingObserver.observe(news);
   spacingObserver.observe(document.querySelector('.about-demo-row'));
   desktop.addEventListener('change', alignSectionGaps);
   alignSectionGaps();
