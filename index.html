@@ -57,20 +57,39 @@
 </section>
 <figure class="world-model-icon">
   <svg viewBox="0 0 230 150" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Robotic arm holding a globe">
+    <defs>
+      <linearGradient id="arm-metal" x2=".85" y2="1" gradientUnits="objectBoundingBox">
+        <stop stop-color="#dce8d9"/><stop offset=".44" stop-color="#9ebaac"/><stop offset="1" stop-color="#527968"/>
+      </linearGradient>
+      <radialGradient id="arm-pivot" cx=".32" cy=".25" r=".8">
+        <stop stop-color="#eef4e9"/><stop offset="1" stop-color="#6c9482"/>
+      </radialGradient>
+      <radialGradient id="globe-surface" cx=".32" cy=".28" r=".78">
+        <stop stop-color="#fdfdf7"/><stop offset="1" stop-color="#d0e0d3"/>
+      </radialGradient>
+    </defs>
     <g id="spin-globe" tabindex="0" role="slider" aria-label="Globe rotation" aria-valuemin="0" aria-valuemax="359" aria-valuenow="0">
-      <circle cx="151" cy="49" r="32" fill="#fbfaf6"/>
+      <circle cx="151" cy="49" r="32" fill="url(#globe-surface)"/>
       <path id="globe-meridians" stroke-width="1.35" d="M151 17v64 M151 17a16 32 0 0 1 0 64 M151 17a16 32 0 0 0 0 64"/>
       <path stroke-width="1.35" d="M119 49h64m-57-20q25 15 50 0m-50 40q25-15 50 0"/>
     </g>
     <g pointer-events="none">
-      <path d="M34 132h58v8H34z"/>
-      <path d="M55 132v-13a8 8 0 0 1 16 0v13"/>
-      <path d="m58 112 25-47 11 6-25 43z" fill="#fbfaf6"/>
-      <path d="m95 58 48 33-7 10-48-33z" fill="#fbfaf6"/>
-      <circle cx="88" cy="64" r="8" fill="#fbfaf6"/>
-      <circle cx="88" cy="64" r="2"/>
-      <circle cx="140" cy="96" r="5" fill="#fbfaf6"/>
-      <path d="M143 92l5-8m-12-7 2 7h20l7-9m-17 9v-3"/>
+      <ellipse cx="62" cy="138" rx="36" ry="5" fill="#41634f" opacity=".12" stroke="none"/>
+      <path d="M34 129v8c0 4 56 4 56 0v-8" fill="#648675"/>
+      <ellipse cx="62" cy="129" rx="28" ry="7" fill="url(#arm-metal)"/>
+      <path d="M49 127v-10h26v10c0 4-26 4-26 0z" fill="url(#arm-metal)"/>
+      <path d="M54 111 79 60a8 8 0 0 1 15 7l-25 51z" fill="url(#arm-metal)"/>
+      <path d="m61 108 22-44" stroke="#e4eee3" stroke-width="2.3" opacity=".68"/>
+      <path d="m91 56 52 27a7 7 0 0 1-7 12L84 69z" fill="url(#arm-metal)"/>
+      <path d="m98 63 36 19" stroke="#edf4e9" stroke-width="2" opacity=".65"/>
+      <circle cx="62" cy="116" r="10" fill="url(#arm-pivot)"/>
+      <circle cx="62" cy="116" r="3.5" fill="#527968"/>
+      <circle cx="88" cy="63" r="10" fill="url(#arm-pivot)"/>
+      <circle cx="88" cy="63" r="4" fill="#527968"/>
+      <circle cx="139" cy="89" r="8" fill="url(#arm-pivot)"/>
+      <path d="m140 87-16-6-8-10 1-9 5 1 1 7 7 6 14 3z" fill="url(#arm-metal)"/>
+      <path d="m142 83 15-3 11-7 5-9 5 2-5 12-12 9-17 4z" fill="url(#arm-metal)"/>
+      <circle cx="140" cy="88" r="3" fill="#527968"/>
     </g>
   </svg>
 </figure>
