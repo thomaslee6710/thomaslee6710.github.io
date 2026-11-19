@@ -63,7 +63,10 @@
     </ul>
   </article>
   <article class="project-card">
-    <img class="project-media project-media--plot" src="project-microtaur.gif" alt="Animated comparison of PPO and harmonic gait controllers across four Microtaur spine configurations" loading="lazy">
+    <video class="project-media project-media--plot" controls playsinline preload="metadata" aria-label="Microtaur simulation comparison of PPO and harmonic gait controllers">
+      <source src="https://raw.githubusercontent.com/robomechanics/microtaur_RL/cpg-rl/microtaur_runs/cpg_rl/results/00_all_robots_rl_vs_final_vs_old_cpg.mp4" type="video/mp4">
+      <a href="https://raw.githubusercontent.com/robomechanics/microtaur_RL/cpg-rl/microtaur_runs/cpg_rl/results/00_all_robots_rl_vs_final_vs_old_cpg.mp4">Download the Microtaur comparison video</a>
+    </video>
     <h3>Microtaur: Harmonic Gait Transfer Across Spine Morphologies</h3>
     <p class="project-meta">Sep 2026 · Robomechanics Lab</p>
     <p>PPO discovers periodic gaits for rigid, roll, pitch, and yaw spine configurations. Offline Fourier fitting converts each policy’s motor targets into a morphology-specific central pattern generator. The resulting embedded controller replays coordinated joint commands at 50 Hz using a shared clock and fixed coefficients, without state estimation or neural-network inference.</p>
