@@ -91,11 +91,12 @@
 <article class="row">
   <div class="research-project-heading">
     <h3>Forlax</h3>
-    <div class="research-project-tags"><span>Sim-to-Real Transfer</span><span>Contact Simulation</span><span>Quadruped Locomotion</span></div>
+    <div class="research-project-tags"><span>Differentiable Simulation</span><span>Contact Simulation</span><span>Sim-to-Real Transfer</span></div>
   </div>
   <div>
-    <p class="research-project-summary">I am investigating whether increasing the number of contact solver iterations during training improves sim-to-real transfer for quadruped locomotion. Additional iterations increase simulation cost, so the question is whether they produce more reliable foot contact on hardware.</p>
-    <p class="research-project-summary">The planned study compares PPO policies trained with different solver iteration counts under otherwise matched conditions. PPO lets us vary solver iterations because Forlax training is sensitive to low iteration counts. A candidate hardware metric is stance-phase foot slip, measured as horizontal foot displacement relative to the ground while the foot is in contact.</p>
+    <p class="research-project-summary">Forlax is a JAX framework for first-order reinforcement learning. It uses gradients through differentiable MuJoCo simulation to train locomotion policies over short rollout horizons.</p>
+    <p class="research-project-summary">My contribution investigates whether increasing contact solver iterations during training improves transfer to quadruped hardware enough to justify the extra simulation cost. Since first-order training is sensitive to low iteration counts, we plan to sweep solver iterations with PPO under otherwise matched training conditions.</p>
+    <p class="research-project-summary">On hardware, we are considering stance-phase foot slip as the primary metric, measured by how far each foot slides along the ground while in contact.</p>
   </div>
 </article>
 </div></main><footer><span>Thomas Chun Fai Lee · Carnegie Mellon University</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer></body></html>
