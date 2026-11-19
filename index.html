@@ -52,11 +52,12 @@
 .world-model-icon svg{position:relative;display:block;width:100%;height:auto;margin-bottom:18px}
 .world-model-icon{container-type:inline-size;padding-top:18px;padding-bottom:12px}
 .skill-bubbles{
-  position:absolute;inset:0 0 20px;z-index:-1;
+  position:absolute;inset:0 -5% calc(29px + 6%);z-index:-1;
+  display:flex;flex-wrap:wrap;align-content:space-evenly;justify-content:center;gap:6px 8px;
   list-style:none;padding:0;margin:0;pointer-events:none;
 }
 .skill-bubbles li{
-  position:absolute;left:var(--x);top:var(--y);
+  flex:0 0 auto;
   padding:.22em .55em;border:1px solid #b9cabe;border-radius:999px;
   background:#f1f4ed;color:#496658;font:clamp(8px,3.25cqw,11px)/1.3 monospace;
   white-space:nowrap;
@@ -98,24 +99,24 @@
 </section>
 <figure class="world-model-icon">
   <ul class="skill-bubbles" aria-label="Research and technical skills">
-    <li style="--x:1%;--y:2%">Reinforcement learning</li>
-    <li style="--x:78%;--y:3%">VLA</li>
-    <li style="--x:84%;--y:20%">Python</li>
-    <li style="--x:39%;--y:12%">World action models</li>
-    <li style="--x:5%;--y:24%">Contact-rich manipulation</li>
-    <li style="--x:52%;--y:33%">World models</li>
-    <li style="--x:0%;--y:39%">Optimal control</li>
-    <li style="--x:16%;--y:51%">Imitation learning</li>
-    <li style="--x:80%;--y:48%">C++</li>
-    <li style="--x:88%;--y:68%">ROS 2</li>
-    <li style="--x:30%;--y:64%">Adaptive control</li>
-    <li style="--x:1%;--y:75%">Legged locomotion</li>
-    <li style="--x:51%;--y:84%">Motion planning</li>
-    <li style="--x:28%;--y:94%">Robot hardware</li>
-    <li style="--x:72%;--y:57%">Isaac Lab</li>
-    <li style="--x:4%;--y:59%">JAX</li>
-    <li style="--x:68%;--y:74%">Gazebo</li>
-    <li style="--x:46%;--y:3%">Contact modeling</li>
+    <li>Reinforcement learning</li>
+    <li>VLA</li>
+    <li>Python</li>
+    <li>World action models</li>
+    <li>Contact-rich manipulation</li>
+    <li>World models</li>
+    <li>Optimal control</li>
+    <li>Imitation learning</li>
+    <li>C++</li>
+    <li>ROS 2</li>
+    <li>Adaptive control</li>
+    <li>Legged locomotion</li>
+    <li>Motion planning</li>
+    <li>Robot hardware</li>
+    <li>Isaac Lab</li>
+    <li>JAX</li>
+    <li>Gazebo</li>
+    <li>Contact modeling</li>
   </ul>
   <svg viewBox="14 -13 208 163" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Robotic arm holding a globe">
     <defs>
