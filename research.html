@@ -30,11 +30,22 @@
 @media (max-width: 440px) {
   .research-project-demos { grid-template-columns: 1fr; }
 }
+.research-project-heading h3 { margin: 0; }
+.research-project-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.research-project-tags span {
+  padding: 2px 8px;
+  border: 1px solid #c5d2c5;
+  border-radius: 999px;
+  font: 0.75rem/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+}
 </style>
 </head>
 <body><header><nav aria-label="Main navigation"><b style="display:flex;align-items:center;gap:22px;margin-right:auto"><a href="index.html"><img src="site-icon.svg?v=2" alt="" width="36" height="36" style="display:block"></a><span>Thomas Lee</span></b><a href="index.html">Home</a><a aria-current="page" href="research.html">Research</a><a href="projects.html">Projects</a><a href="publications.html">Publications</a></nav></header><main><div class="sub research-projects"><h1>Research</h1>
 <article class="row">
-  <h3>Conditioning World Model for Adaptive Quadruped Locomotion Across Changing Terrains</h3>
+  <div class="research-project-heading">
+    <h3>Conditioning World Model for Adaptive Quadruped Locomotion Across Changing Terrains</h3>
+    <div class="research-project-tags"><span>Latent World Models</span><span>Interaction History</span><span>Deformable Terrain</span></div>
+  </div>
   <div>
   <p class="research-project-summary">This project investigates how a quadruped can use limited data from physical interactions to adapt its control during terrain transitions. Our model-based reinforcement learning approach plans in the latent space of a world model conditioned on a transformer encoding of recent actions and state changes.</p>
   <p class="research-project-summary">In simulation, history conditioning improved motion prediction over the fixed model under changes in friction and actuator strength, including actuator strengths outside the training range. After mid-episode changes, prediction error fell by 11–21% for the tested reductions in actuator strength and by 43% for the tested drop in friction. With Field AI, we use Newton to evaluate quadruped locomotion across firm-ground-to-mud transitions and mud patches with varying foot withdrawal resistance.</p>
@@ -49,7 +60,10 @@
   </div>
 </article>
 <article class="row">
-  <h3>Closed-Loop-Compliant Reinforcement Learning</h3>
+  <div class="research-project-heading">
+    <h3>Closed-Loop-Compliant Reinforcement Learning</h3>
+    <div class="research-project-tags"><span>Policy Post-Training</span><span>Task-Space Compliance</span><span>Paired Rollouts</span></div>
+  </div>
   <div>
   <p class="research-project-summary">This project investigates how to give an existing robot policy a tunable response to external forces while preserving its nominal behavior. Using each policy’s own undisturbed rollout as the moving reference lets the same post-training objective apply across robot embodiments and tasks without a separately designed reference trajectory. A paired rollout under force lets us train a residual policy to match the resulting task-space deviation to a virtual mass–spring–damper response with fixed low-level gains.</p>
   <p class="research-project-summary">In simulation, the Go2 yielded at the trunk under pushes and returned to its standing posture after release. The Franka arm yielded at the hand under direct pushes and, in a separate null-space task, yielded at the elbow while keeping the hand near its target. The G1 humanoid maintained locomotion under external pulls at its palms.</p>
