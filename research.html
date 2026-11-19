@@ -20,7 +20,7 @@
   margin-top: 20px;
 }
 .research-project-demos figure { margin: 0; min-width: 0; }
-.research-project-demos img { display: block; width: 100%; height: auto; border-radius: 12px; }
+.research-project-demos :is(img, video) { display: block; width: 100%; height: auto; border-radius: 12px; }
 .research-project-media { margin: 20px 0 0; }
 .research-project-media .research-project-video { margin-top: 0; }
 .research-projects figcaption {
@@ -94,25 +94,25 @@
     <div class="research-project-tags"><span>Differentiable Simulation</span><span>Contact Simulation</span><span>Sim-to-Real Transfer</span></div>
   </div>
   <div>
-    <p class="research-project-summary">Forlax aims to make first-order reinforcement learning practical for contact-rich tasks. It computes policy gradients by backpropagating through short rollouts in differentiable MuJoCo (MJX). Contact transitions can make those gradients unreliable, and differentiating through every solver iteration adds compute cost. Forlax smooths the contact constraints, solves them to convergence, and uses implicit differentiation to compute gradients without unrolling the solver. The simulation gallery below includes vertical-axis rotation and a Unitree Go1 handstand.</p>
+    <p class="research-project-summary">Forlax aims to make first-order reinforcement learning practical for contact-rich tasks. It computes policy gradients by backpropagating through short rollouts in differentiable MuJoCo (MJX). Contact transitions can make those gradients unreliable, and differentiating through every solver iteration adds compute cost. Forlax smooths the contact constraints, solves them to convergence, and uses implicit differentiation to compute gradients without unrolling the solver. The simulation gallery shows learned humanoid locomotion, a quadruped handstand, and in-hand cube rotation.</p>
     <p class="research-project-summary">My contribution investigates whether increasing contact solver iterations during training improves transfer to quadruped hardware enough to justify the extra simulation cost. Since first-order training is sensitive to low iteration counts, we plan to sweep solver iterations with PPO under otherwise matched training conditions.</p>
     <p class="research-project-summary">On hardware, we are considering stance-phase foot slip as the primary metric, measured by how far each foot slides along the ground while in contact.</p>
     <div class="research-project-demos">
       <figure>
-        <img src="forlax-best_seed42.png" width="320" height="240" alt="Best episode (seed 42)" loading="lazy" decoding="async">
-        <figcaption>Best episode (seed 42).</figcaption>
+        <video src="forlax-best_seed42.mp4" width="480" height="360" poster="forlax-best_seed42.png" autoplay muted loop playsinline controls preload="metadata" aria-label="Unitree G1 joystick locomotion"></video>
+        <figcaption>Unitree G1 joystick locomotion.</figcaption>
       </figure>
       <figure>
-        <img src="forlax-median_seed42.png" width="320" height="240" alt="Median episode (seed 42)" loading="lazy" decoding="async">
-        <figcaption>Median episode (seed 42).</figcaption>
+        <video src="forlax-median_seed42.mp4" width="480" height="360" poster="forlax-median_seed42.png" autoplay muted loop playsinline controls preload="metadata" aria-label="Berkeley Humanoid joystick locomotion"></video>
+        <figcaption>Berkeley Humanoid joystick locomotion.</figcaption>
       </figure>
       <figure>
-        <img src="forlax-patscapo_rotateZ.png" width="320" height="240" alt="PAT-SCAPO rotation about the vertical axis" loading="lazy" decoding="async">
-        <figcaption>PAT-SCAPO rotation about the vertical axis.</figcaption>
+        <video src="forlax-patscapo_rotateZ.mp4" width="480" height="360" poster="forlax-patscapo_rotateZ.png" autoplay muted loop playsinline controls preload="metadata" aria-label="LEAP Hand rotating a cube about its vertical axis"></video>
+        <figcaption>LEAP Hand rotating a cube about its vertical axis.</figcaption>
       </figure>
       <figure>
-        <img src="forlax-handstand_H32tr2_ep8_best_episode.png" width="320" height="240" alt="Handstand demo" loading="lazy" decoding="async">
-        <figcaption>Handstand demo.</figcaption>
+        <video src="forlax-handstand_H32tr2_ep8_best_episode.mp4" width="480" height="360" poster="forlax-handstand_H32tr2_ep8_best_episode.png" autoplay muted loop playsinline controls preload="metadata" aria-label="Unitree Go1 performing a handstand"></video>
+        <figcaption>Unitree Go1 performing a handstand.</figcaption>
       </figure>
     </div>
   </div>
