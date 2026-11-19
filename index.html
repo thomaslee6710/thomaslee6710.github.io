@@ -97,7 +97,8 @@
 .home-news time{font-family:monospace;font-size:13px}
 .visitor-map{width:100%;margin:0 auto 54px;padding:0 5vw}
 .visitor-map h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 14px}
-.visitor-map svg{display:block;width:100%;height:auto;background:#f2f4ee;border:1px solid #c5d2c5;border-radius:12px}
+.visitor-map .visitor-widget{width:100%;overflow:hidden;border:1px solid #c5d2c5;border-radius:12px;background:#fbfaf6}
+.visitor-map #mapmyvisitors-widget .mapmyvisitors-bottom-text{background:#e6eee4;color:#1d392a;border-color:#c5d2c5;text-shadow:none;font-family:monospace}
 .visitor-map p{font:11px/1.4 monospace;margin:8px 0 0}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
@@ -203,15 +204,13 @@
     <li><time datetime="2019-12">Dec 2019</time><span>Published and presented <a href="https://docs.google.com/presentation/d/1IdiJnOJudx92b6nhAKf6YbhDOAx6FgSU1lDCIh594nw/edit?slide=id.p#slide=id.p">“Optimization Under Constraints of Rooftop Solar in High Winds”</a> at AGU 2019 with support from an ISF Academy scholarship.</span></li>
   </ul>
   </div>
-</section><section class="visitor-map" aria-labelledby="visitor-map-title" data-visitor-endpoint="">
+</section><section class="visitor-map" aria-labelledby="visitor-map-title">
   <h2 id="visitor-map-title">Visitor map</h2>
-  <svg viewBox="0 0 720 360" role="img" aria-labelledby="visitor-map-title" aria-describedby="visitor-map-status">
-    <image href="visitor-land.svg" width="720" height="360"/>
-    <g data-visitor-pins fill="#426a54" fill-opacity=".75" stroke="#fbfaf6" stroke-width="1"></g>
-  </svg>
-  <p id="visitor-map-status" role="status">Visitor locations will appear once tracking is connected.</p>
+  <div class="visitor-widget">
+    <script id="mapmyvisitors" src="https://mapmyvisitors.com/map.js?cl=829987&amp;w=a&amp;t=n&amp;d=SpMxv-E5e4ngMl0aLMOr83hM3_ezLZlg4lKRuWXWtkU&amp;co=fbfaf6&amp;cmo=416b53&amp;cmn=924b45&amp;ct=1d392a" async></script>
+  </div>
+  <p>Dots show approximate visitor locations. Map provided by MapMyVisitors.</p>
 </section>
-<script src="visitor-map.js" defer></script>
 </main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer><script>
 (() => {
   const globe = document.querySelector('#spin-globe');
