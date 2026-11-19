@@ -44,6 +44,8 @@
 .about-me h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 12px}
 .about-me p{font-size:16px;max-width:72ch;margin:0 0 12px}
 .about-me p:last-child{margin-bottom:0}
+#spin-globe{cursor:grab;touch-action:none}
+#spin-globe:active{cursor:grabbing}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
 <main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I want to study how robots can use limited data from physically interacting with the world to decide how to act in unstructured environments.</p><a class="worklink" href="resume.pdf">Résumé <span aria-hidden="true">↗</span></a></div><div class="portrait-frame"><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></div></section>
@@ -54,22 +56,63 @@
   <p>I work at the intersection of reinforcement learning and optimal control, with an interest in building world models from robot interaction data and using them to plan and control motion in contact-rich tasks.</p>
 </section>
 <figure class="world-model-icon">
-  <svg viewBox="0 0 230 150" role="img" aria-labelledby="world-model-icon-title" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <title id="world-model-icon-title">A robotic arm holding a wireframe globe</title>
-    <g stroke-width="1.7">
-      <circle cx="143" cy="49" r="32"/>
-      <ellipse cx="143" cy="49" rx="15" ry="32"/>
-      <path d="M143 17v64m-32-32h64m-57-20q25 15 50 0m-50 40q25-15 50 0"/>
+  <svg viewBox="0 0 230 150" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Robotic arm holding a globe">
+    <g id="spin-globe" tabindex="0" role="slider" aria-label="Globe rotation" aria-valuemin="0" aria-valuemax="359" aria-valuenow="0">
+      <circle cx="151" cy="49" r="32" fill="#fbfaf6"/>
+      <path id="globe-meridians" stroke-width="1.35" d="M151 17v64 M151 17a16 32 0 0 1 0 64 M151 17a16 32 0 0 0 0 64"/>
+      <path stroke-width="1.35" d="M119 49h64m-57-20q25 15 50 0m-50 40q25-15 50 0"/>
     </g>
-    <g>
-      <path d="M34 131h54v9H34zM51 131v-13a10 10 0 0 1 20 0v13"/>
-      <path d="m54 111 28-40m-16 41 26-36m4-10 32 24m-29-33 37 28"/>
-      <circle cx="92" cy="66" r="8"/>
-      <circle cx="92" cy="66" r="2"/>
-      <path d="m129 89 8 6 9-8m-9 8v8m-14-18-8-9 2-7m26 17 12-4 5-8"/>
+    <g pointer-events="none">
+      <path d="M34 132h58v8H34z"/>
+      <path d="M55 132v-13a8 8 0 0 1 16 0v13"/>
+      <path d="m58 112 25-47 11 6-25 43z" fill="#fbfaf6"/>
+      <path d="m95 58 48 33-7 10-48-33z" fill="#fbfaf6"/>
+      <circle cx="88" cy="64" r="8" fill="#fbfaf6"/>
+      <circle cx="88" cy="64" r="2"/>
+      <circle cx="140" cy="96" r="5" fill="#fbfaf6"/>
+      <path d="M143 92l5-8m-12-7 2 7h20l7-9m-17 9v-3"/>
     </g>
   </svg>
 </figure>
 </div>
 <section class="terrain" aria-labelledby="demo-title">
-<div class="terrain-copy"><div class="terrain-caption"><h2 id="demo-title">Predicting the next step</h2><p>Drag the terrain up or down to see how the robots’ predicted steps change.</p></div></div><div class="mesh-strip"><canvas id="page-mesh" tabindex="0" aria-label="Drag up or down to shape the ground at each spot. Left and right arrows move the brush; up and down sculpt. The dashed humanoid predicts the next stride."></canvas><canvas id="walker" aria-hidden="true"></canvas></div></section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer></body></html>
+<div class="terrain-copy"><div class="terrain-caption"><h2 id="demo-title">Predicting the next step</h2><p>Drag the terrain up or down to see how the robots’ predicted steps change.</p></div></div><div class="mesh-strip"><canvas id="page-mesh" tabindex="0" aria-label="Drag up or down to shape the ground at each spot. Left and right arrows move the brush; up and down sculpt. The dashed humanoid predicts the next stride."></canvas><canvas id="walker" aria-hidden="true"></canvas></div></section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer><script>
+(() => {
+  const globe = document.querySelector('#spin-globe');
+  const meridians = document.querySelector('#globe-meridians');
+  let angle = 0;
+  let drag = null;
+
+  function render(value) {
+    angle = ((value % 360) + 360) % 360;
+    globe.setAttribute('aria-valuenow', Math.floor(angle));
+    const arcs = [];
+    for (let longitude = 0; longitude < 360; longitude += 45) {
+      const radians = (longitude + angle) * Math.PI / 180;
+      if (Math.cos(radians) < 0) continue;
+      const radius = 32 * Math.sin(radians);
+      arcs.push(Math.abs(radius) < .1
+        ? 'M151 17v64'
+        : 'M151 17a' + Math.abs(radius) + ' 32 0 0 ' + Number(radius > 0) + ' 0 64');
+    }
+    meridians.setAttribute('d', arcs.join(' '));
+  }
+
+  globe.addEventListener('pointerdown', event => {
+    if (drag || event.button !== 0) return;
+    drag = { id: event.pointerId, x: event.clientX, angle };
+    globe.setPointerCapture(event.pointerId);
+  });
+  globe.addEventListener('pointermove', event => {
+    if (drag?.id === event.pointerId) render(drag.angle + (event.clientX - drag.x) * 2.2);
+  });
+  globe.addEventListener('lostpointercapture', () => { drag = null; });
+  globe.addEventListener('keydown', event => {
+    const direction = { ArrowLeft: -1, ArrowRight: 1, ArrowDown: -1, ArrowUp: 1 }[event.key];
+    if (!direction) return;
+    event.preventDefault();
+    render(angle + direction * 12);
+  });
+  render(0);
+})();
+</script></body></html>
