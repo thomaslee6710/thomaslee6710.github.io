@@ -95,6 +95,10 @@
 .home-news ul{list-style:none;padding:0;margin:0;max-width:76ch}
 .home-news li{display:grid;grid-template-columns:11ch minmax(0,1fr);gap:18px;padding:10px 0;font-size:15px}
 .home-news time{font-family:monospace;font-size:13px}
+.visitor-map{max-width:1250px;margin:0 auto 54px;padding:0 5vw}
+.visitor-map h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 14px}
+.visitor-map svg{display:block;width:100%;max-width:720px;height:auto;background:#f2f4ee;border:1px solid #c5d2c5;border-radius:12px}
+.visitor-map p{font:11px/1.4 monospace;margin:8px 0 0}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
 <main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I want to study how robots can use limited data from physically interacting with the world to decide how to act in unstructured environments.</p><a class="worklink" href="resume.pdf">Résumé <span aria-hidden="true">↗</span></a></div><div class="portrait-outline"><div class="portrait-frame"><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></div></div></section>
@@ -199,7 +203,16 @@
     <li><time datetime="2019-12">Dec 2019</time><span>Published and presented <a href="https://docs.google.com/presentation/d/1IdiJnOJudx92b6nhAKf6YbhDOAx6FgSU1lDCIh594nw/edit?slide=id.p#slide=id.p">“Optimization Under Constraints of Rooftop Solar in High Winds”</a> at AGU 2019 with support from an ISF Academy scholarship.</span></li>
   </ul>
   </div>
-</section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer><script>
+</section><section class="visitor-map" aria-labelledby="visitor-map-title" data-visitor-endpoint="">
+  <h2 id="visitor-map-title">Visitor map</h2>
+  <svg viewBox="0 0 720 360" role="img" aria-labelledby="visitor-map-title" aria-describedby="visitor-map-status">
+    <image href="visitor-land.svg" width="720" height="360"/>
+    <g data-visitor-pins fill="#426a54" fill-opacity=".75" stroke="#fbfaf6" stroke-width="1"></g>
+  </svg>
+  <p id="visitor-map-status" role="status">Visitor locations will appear once tracking is connected.</p>
+</section>
+<script src="visitor-map.js" defer></script>
+</main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer><script>
 (() => {
   const globe = document.querySelector('#spin-globe');
   const grid = document.querySelector('#globe-meridians');
