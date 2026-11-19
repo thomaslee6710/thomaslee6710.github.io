@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Research · Thomas Chun Fai Lee</title><link rel="icon" type="image/svg+xml" href="site-icon.svg?v=2"><link rel="stylesheet" href="style.css?v=mono-nav-footer"><style>
 .research-projects > .row { padding-block: clamp(40px, 6vw, 88px); }
+.research-project-summary { font-size: 0.94rem; }
 .research-project-video { display: block; width: 100%; height: auto; margin-top: 20px; border-radius: 12px; }
 </style>
 </head>
@@ -8,7 +9,7 @@
 <article class="row">
   <h3>History-Conditioned World Model for Adaptive Quadruped Locomotion</h3>
   <div>
-  <p>This project investigates how much recent interaction history a quadruped needs to adapt its dynamics predictions and control as contact conditions change. In simulation, short histories retained most of the prediction gains under shifts in friction and actuator strength, while longer histories could slow adaptation after a transition. Lower prediction error did not consistently translate to better closed-loop control, motivating a closer look at which predictions matter for selecting actions. In collaboration with Field AI, we use the Newton simulator to extend these evaluations to deformable terrain, including transitions from firm ground to mud and between substrates with different foot withdrawal resistance. We are investigating whether conditioning predictions on contact history from another leg at a planned foothold can improve motion prediction and control before touchdown.</p>
+  <p class="research-project-summary">We use a learned world model for adaptive quadruped control during terrain transitions. A transformer encodes recent joint commands and observed state changes to condition a latent dynamics model. Model predictive path integral control uses that model to score candidate command sequences and replan as new observations arrive. In simulation, the history-conditioned model predicted motion more accurately than the fixed model under shifts in friction and actuator strength, including actuator strengths outside the training range. In collaboration with Field AI, we use Newton to evaluate transitions from firm ground to mud and across mud patches with different resistance to foot withdrawal.</p>
   <video class="research-project-video" controls playsinline preload="metadata" width="960" height="540" aria-label="Quadruped locomotion on deformable terrain in Newton">
     <source src="mud.mp4" type="video/mp4">
     <a href="mud.mp4">Download the mud locomotion video</a>.
