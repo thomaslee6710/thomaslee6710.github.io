@@ -95,7 +95,7 @@
   </div>
   <div>
     <p class="research-project-summary">Forlax aims to make first-order reinforcement learning practical for contact-rich tasks. It computes policy gradients by backpropagating through short rollouts in differentiable MuJoCo (MJX). Contact transitions can make those gradients unreliable, and differentiating through every solver iteration adds compute cost. Forlax smooths the contact constraints, solves them to convergence, and uses implicit differentiation to compute gradients without unrolling the solver. The simulation gallery shows learned humanoid locomotion, a quadruped handstand, and in-hand cube rotation.</p>
-    <p class="research-project-summary">My contribution investigates whether increasing contact solver iterations during training improves transfer to quadruped hardware enough to justify the extra simulation cost. Since first-order training is sensitive to low iteration counts, we plan to sweep solver iterations with PPO under otherwise matched training conditions.</p>
+    <p class="research-project-summary">My work asks how accurately contact must be solved in simulation for learned locomotion to transfer reliably to hardware. We plan to vary the contact solver’s iteration budget under matched PPO training conditions to isolate its effect on transfer and determine when tighter contact solves justify their computational cost.</p>
     <p class="research-project-summary">On hardware, we are considering stance-phase foot slip as the primary metric, measured by how far each foot slides along the ground while in contact.</p>
     <div class="research-project-demos">
       <figure>
