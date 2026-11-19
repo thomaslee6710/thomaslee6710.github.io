@@ -161,7 +161,7 @@
 (() => {
   const globe = document.querySelector('#spin-globe');
   const grid = document.querySelector('#globe-meridians');
-  const roll = Math.PI / 18;
+  const roll = Math.PI / 36;
   const basis = [[Math.cos(roll),Math.sin(roll),0],[-Math.sin(roll),Math.cos(roll),0],[0,0,1]];
   const cubeBack = document.querySelector('#cube-back');
   const cubeFront = document.querySelector('#cube-front');
@@ -292,7 +292,7 @@
     cancelAnimationFrame(frame);
     rotate(...movement);
   });
-  rotate(5,-8);
+  rotate(3,-4);
 
   const profile = document.querySelector('.profile');
   const about = document.querySelector('.about-me');
