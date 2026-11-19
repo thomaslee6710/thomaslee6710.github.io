@@ -78,10 +78,9 @@
         <stop offset="1" stop-color="#294e40" stop-opacity=".42"/>
       </radialGradient>
     </defs>
-    <g id="spin-globe" tabindex="0" role="slider" aria-label="Globe rotation" aria-valuemin="0" aria-valuemax="359" aria-valuenow="0">
+    <g id="spin-globe" tabindex="0" role="group" aria-label="Rotatable globe. Drag in any direction or use the arrow keys.">
       <circle cx="151" cy="49" r="32" fill="url(#globe-surface)" stroke="#41634f" stroke-width="1.5"/>
       <path id="globe-meridians" stroke="url(#globe-grid)" stroke-width="1.25" d="M151 17v64 M151 17a16 32 0 0 1 0 64 M151 17a16 32 0 0 0 0 64"/>
-      <path stroke="url(#globe-grid)" stroke-width="1.25" d="M119 49h64m-57-20q25 15 50 0m-50 40q25-15 50 0"/>
       <path d="M126 39a27 27 0 0 1 15-15" stroke="#f3faed" stroke-width="2.5" opacity=".63" pointer-events="none"/>
     </g>
     <g pointer-events="none">
@@ -109,34 +108,69 @@
 <div class="terrain-copy"><div class="terrain-caption"><h2 id="demo-title">Predicting next step</h2><p>Drag the terrain up or down to see how the robots’ predicted steps change.</p></div></div><div class="mesh-strip"><canvas id="page-mesh" tabindex="0" aria-label="Drag up or down to shape the ground at each spot. Left and right arrows move the brush; up and down sculpt. The dashed humanoid predicts the next stride."></canvas><canvas id="walker" aria-hidden="true"></canvas></div></section></main><footer><span>Robomechanics Lab · Pittsburgh, PA</span><div><a href="mailto:chunfai2@andrew.cmu.edu">Email</a> · <a href="https://github.com/thomaslee6710">GitHub</a> · <a href="https://www.linkedin.com/in/thomas-lee6710/">LinkedIn</a></div></footer><script>
 (() => {
   const globe = document.querySelector('#spin-globe');
-  const meridians = document.querySelector('#globe-meridians');
-  let angle = 0;
+  const grid = document.querySelector('#globe-meridians');
+  const basis = [[1,0,0],[0,1,0],[0,0,1]];
+  const lines = [];
+  for (let longitude = 0; longitude < 8; longitude++) {
+    const theta = longitude * Math.PI / 4;
+    lines.push(Array.from({length:49}, (_, i) => {
+      const phi = i * Math.PI / 48;
+      return [Math.sin(phi)*Math.sin(theta), -Math.cos(phi), Math.sin(phi)*Math.cos(theta)];
+    }));
+  }
+  for (const latitude of [-35,0,35]) {
+    const phi = latitude * Math.PI / 180;
+    lines.push(Array.from({length:73}, (_, i) => {
+      const theta = i * 2 * Math.PI / 72;
+      return [Math.cos(phi)*Math.sin(theta), Math.sin(phi), Math.cos(phi)*Math.cos(theta)];
+    }));
+  }
   let drag = null;
   let frame = 0;
 
-  function render(value) {
-    angle = ((value % 360) + 360) % 360;
-    globe.setAttribute('aria-valuenow', Math.floor(angle));
-    const arcs = [];
-    for (let longitude = 0; longitude < 360; longitude += 45) {
-      const radians = (longitude + angle) * Math.PI / 180;
-      if (Math.cos(radians) < 0) continue;
-      const radius = 32 * Math.sin(radians);
-      arcs.push(Math.abs(radius) < .1
-        ? 'M151 17v64'
-        : 'M151 17a' + Math.abs(radius) + ' 32 0 0 ' + Number(radius > 0) + ' 0 64');
+  function render() {
+    const path = [];
+    const point = ([x,y]) => (151+32*x).toFixed(2)+' '+(49+32*y).toFixed(2);
+    for (const line of lines) {
+      let previous = null;
+      for (const vertex of line) {
+        const current = basis[0].map((_, i) =>
+          vertex[0]*basis[0][i]+vertex[1]*basis[1][i]+vertex[2]*basis[2][i]);
+        if (previous && (previous[2] >= 0)!==(current[2] >= 0)) {
+          const t = previous[2]/(previous[2]-current[2]);
+          const edge = previous.map((v,i) => v+t*(current[i]-v));
+          path.push((current[2] >= 0 ? 'M' : 'L')+point(edge));
+        }
+        if (current[2] >= 0) path.push((previous ? 'L' : 'M')+point(current));
+        previous = current;
+      }
     }
-    meridians.setAttribute('d', arcs.join(' '));
+    grid.setAttribute('d', path.join(' '));
   }
 
-  function coast(velocity) {
+  function rotate(dx,dy) {
+    const distance = Math.hypot(dx,dy);
+    if (!distance) return;
+    const ax = -dy/distance, ay = dx/distance;
+    const angle = distance * .038;
+    const c = Math.cos(angle), s = Math.sin(angle);
+    for (let i=0; i<basis.length; i++) {
+      const [x,y,z] = basis[i];
+      const along = (ax*x+ay*y)*(1-c);
+      basis[i] = [x*c+ay*z*s+ax*along, y*c-ax*z*s+ay*along, z*c+(ax*y-ay*x)*s];
+    }
+    render();
+  }
+
+  function coast(vx,vy) {
     let previous = performance.now();
     function tick(now) {
-      const elapsed = Math.min(40, now - previous);
+      const elapsed = Math.min(40, now-previous);
       previous = now;
-      render(angle + velocity * elapsed);
-      velocity *= Math.exp(-elapsed / 240);
-      if (Math.abs(velocity) > 0.012) frame = requestAnimationFrame(tick);
+      rotate(vx*elapsed,vy*elapsed);
+      const decay = Math.exp(-elapsed/240);
+      vx *= decay; vy *= decay;
+      if (Math.hypot(vx,vy)>.006) frame = requestAnimationFrame(tick);
     }
     frame = requestAnimationFrame(tick);
   }
@@ -144,33 +178,33 @@
   globe.addEventListener('pointerdown', event => {
     if (drag || event.button !== 0) return;
     cancelAnimationFrame(frame);
-    drag = { id: event.pointerId, x: event.clientX, time: performance.now(), velocity: 0 };
+    drag = {id:event.pointerId,x:event.clientX,y:event.clientY,time:performance.now(),vx:0,vy:0};
     globe.setPointerCapture(event.pointerId);
   });
   globe.addEventListener('pointermove', event => {
     if (drag?.id !== event.pointerId) return;
     const now = performance.now();
-    const delta = (event.clientX - drag.x) * 2.2;
-    drag.velocity = Math.max(-2, Math.min(2, delta / Math.max(8, now - drag.time)));
-    drag.x = event.clientX;
-    drag.time = now;
-    render(angle + delta);
+    const dx=event.clientX-drag.x, dy=event.clientY-drag.y;
+    const time=Math.max(8,now-drag.time);
+    const scale=1/Math.max(time,Math.hypot(dx,dy));
+    drag={...drag,x:event.clientX,y:event.clientY,time:now,vx:dx*scale,vy:dy*scale};
+    rotate(dx,dy);
   });
   globe.addEventListener('pointerup', event => {
     if (drag?.id !== event.pointerId) return;
-    if (performance.now() - drag.time < 100 && Math.abs(drag.velocity) > 0.012 &&
-        !matchMedia('(prefers-reduced-motion: reduce)').matches) coast(drag.velocity);
+    if (performance.now()-drag.time<100 && Math.hypot(drag.vx,drag.vy)>.006 &&
+        !matchMedia('(prefers-reduced-motion: reduce)').matches) coast(drag.vx,drag.vy);
     drag = null;
   });
   globe.addEventListener('lostpointercapture', () => { drag = null; });
   globe.addEventListener('keydown', event => {
-    const direction = { ArrowLeft: -1, ArrowRight: 1, ArrowDown: -1, ArrowUp: 1 }[event.key];
-    if (!direction) return;
+    const movement={ArrowLeft:[-6,0],ArrowRight:[6,0],ArrowUp:[0,-6],ArrowDown:[0,6]}[event.key];
+    if (!movement) return;
     event.preventDefault();
     cancelAnimationFrame(frame);
-    render(angle + direction * 12);
+    rotate(...movement);
   });
-  render(0);
+  render();
 
   const profile = document.querySelector('.profile');
   const about = document.querySelector('.about-me');
