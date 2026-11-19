@@ -35,17 +35,19 @@
 .terrain-caption h2{font-family:monospace;font-size:15px;font-weight:700;letter-spacing:normal}
 .terrain-caption p{font-family:monospace;font-size:12px;margin-bottom:0}
 .about-demo-row{max-width:1250px;margin:clamp(28px,5vw,56px) auto 0;padding:0 5vw;display:grid;grid-template-columns:minmax(0,1.8fr) minmax(0,1fr);gap:7%;align-items:end}
-.world-model-icon{width:min(100%,230px);margin:0;justify-self:center;align-self:center;color:#41634f}
+.world-model-icon{width:min(100%,280px);margin:0;justify-self:center;align-self:center;color:#41634f}
 .world-model-icon svg{display:block;width:100%;height:auto}
 .terrain-caption h2{margin:0;line-height:1.3}
 .terrain-caption p{margin-top:6px;line-height:1.5}
 .home .terrain{padding-top:clamp(36px,calc(4vw + 12px),64px)}
-@media(max-width:700px){.about-demo-row{grid-template-columns:1fr;gap:16px}.world-model-icon{width:155px;justify-self:start}}
+@media(max-width:700px){.about-demo-row{grid-template-columns:1fr;gap:16px}.world-model-icon{width:min(100%,190px);justify-self:start}}
 .about-me h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 12px}
 .about-me p{font-size:16px;max-width:72ch;margin:0 0 12px}
 .about-me p:last-child{margin-bottom:0}
 #spin-globe{cursor:grab;touch-action:none}
 #spin-globe:active{cursor:grabbing}
+#spin-globe:focus:not(:focus-visible){outline:none}
+#spin-globe:focus-visible{outline:2px solid #749180;outline-offset:4px}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
 <main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I want to study how robots can use limited data from physically interacting with the world to decide how to act in unstructured environments.</p><a class="worklink" href="resume.pdf">Résumé <span aria-hidden="true">↗</span></a></div><div class="portrait-frame"><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></div></section>
@@ -101,6 +103,7 @@
   const meridians = document.querySelector('#globe-meridians');
   let angle = 0;
   let drag = null;
+  let frame = 0;
 
   function render(value) {
     angle = ((value % 360) + 360) % 360;
@@ -117,19 +120,45 @@
     meridians.setAttribute('d', arcs.join(' '));
   }
 
+  function coast(velocity) {
+    let previous = performance.now();
+    function tick(now) {
+      const elapsed = Math.min(40, now - previous);
+      previous = now;
+      render(angle + velocity * elapsed);
+      velocity *= Math.exp(-elapsed / 240);
+      if (Math.abs(velocity) > 0.012) frame = requestAnimationFrame(tick);
+    }
+    frame = requestAnimationFrame(tick);
+  }
+
   globe.addEventListener('pointerdown', event => {
     if (drag || event.button !== 0) return;
-    drag = { id: event.pointerId, x: event.clientX, angle };
+    cancelAnimationFrame(frame);
+    drag = { id: event.pointerId, x: event.clientX, time: performance.now(), velocity: 0 };
     globe.setPointerCapture(event.pointerId);
   });
   globe.addEventListener('pointermove', event => {
-    if (drag?.id === event.pointerId) render(drag.angle + (event.clientX - drag.x) * 2.2);
+    if (drag?.id !== event.pointerId) return;
+    const now = performance.now();
+    const delta = (event.clientX - drag.x) * 2.2;
+    drag.velocity = Math.max(-2, Math.min(2, delta / Math.max(8, now - drag.time)));
+    drag.x = event.clientX;
+    drag.time = now;
+    render(angle + delta);
+  });
+  globe.addEventListener('pointerup', event => {
+    if (drag?.id !== event.pointerId) return;
+    if (performance.now() - drag.time < 100 && Math.abs(drag.velocity) > 0.012 &&
+        !matchMedia('(prefers-reduced-motion: reduce)').matches) coast(drag.velocity);
+    drag = null;
   });
   globe.addEventListener('lostpointercapture', () => { drag = null; });
   globe.addEventListener('keydown', event => {
     const direction = { ArrowLeft: -1, ArrowRight: 1, ArrowDown: -1, ArrowUp: 1 }[event.key];
     if (!direction) return;
     event.preventDefault();
+    cancelAnimationFrame(frame);
     render(angle + direction * 12);
   });
   render(0);
