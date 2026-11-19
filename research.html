@@ -44,23 +44,35 @@
   padding-inline: clamp(16px, 2.2vw, 28px);
   transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 }
-.research-projects > .row:focus-within {
+.research-projects > .row { position: relative; isolation: isolate; }
+.research-projects > .row::before {
+  content: "";
+  position: absolute;
+  inset-block: -8px;
+  inset-inline: calc(-1 * clamp(12px, 1.5vw, 20px));
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
   background-color: #edf2eb;
-  box-shadow: 0 0 0 8px #edf2eb;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+.research-projects > .row:focus-within::before { opacity: 1; }
+.research-projects > .row:focus-within {
   border-top-color: #738e79;
 }
 .research-projects > .row:focus-within h3 { color: #285c43; }
 @media (hover: hover) and (pointer: fine) {
   .research-projects > .row:hover {
     transform: translateY(-3px);
-    background-color: #edf2eb;
-    box-shadow: 0 0 0 8px #edf2eb, 0 8px 18px 4px rgb(30 62 45 / 10%);
+
   border-top-color: #738e79;
   }
+  .research-projects > .row:hover::before { opacity: 1; box-shadow: 0 8px 18px rgb(30 62 45 / 10%); }
   .research-projects > .row:hover h3 { color: #285c43; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .research-projects > .row { transition: none; }
+  .research-projects > .row, .research-projects > .row::before { transition: none; }
   .research-projects > .row:hover { transform: none; }
 }
 </style>
