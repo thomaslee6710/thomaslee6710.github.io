@@ -78,7 +78,7 @@
 .world-model-icon svg :is(path,circle,ellipse){vector-effect:non-scaling-stroke;stroke-width:1.15px}
 #spin-globe path{stroke-width:.7px}
 #spin-globe circle{stroke-width:.9px}
-.home .terrain{padding-top:var(--terrain-space,clamp(18px,3.5vw,44px))}
+.home .terrain{padding-top:calc(var(--terrain-space,clamp(18px,3.5vw,44px)) + 12px)}
 @media(max-width:700px){.about-demo-row{grid-template-columns:1fr;gap:16px}.world-model-icon{width:min(62%,195px);justify-self:start;margin-top:0}}
 .about-me{position:relative;top:-8px}
 .about-me h2{font-size:clamp(23px,2.4vw,30px);margin:0 0 12px}
