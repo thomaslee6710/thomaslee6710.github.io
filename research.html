@@ -52,7 +52,7 @@
   <h3>Closed-Loop-Compliant Reinforcement Learning</h3>
   <div>
   <p class="research-project-summary">This project investigates how to give an existing robot policy a tunable response to external forces while preserving its nominal behavior. The key idea is to use the policy’s own undisturbed rollout as a moving reference for compliance. A paired rollout under force lets us train a residual policy to match the resulting task-space deviation to a virtual mass–spring–damper response with fixed low-level gains.</p>
-  <p class="research-project-summary">In Isaac Lab, the Go2 yielded at the trunk under pushes and returned to its standing posture after release. The Franka arm yielded at the hand under direct pushes and, in a separate null-space task, yielded at the elbow while keeping the hand near its target. The G1 humanoid maintained locomotion under external pulls at its palms.</p>
+  <p class="research-project-summary">In simulation, the Go2 yielded at the trunk under pushes and returned to its standing posture after release. The Franka arm yielded at the hand under direct pushes and, in a separate null-space task, yielded at the elbow while keeping the hand near its target. The G1 humanoid maintained locomotion under external pulls at its palms.</p>
   <p class="research-project-summary">We are investigating the tradeoff between tracking the desired elbow compliance and keeping the hand on target under contact. On the Franka, we project the compliance reference onto the elbow’s feasible motion with the hand held fixed. We are also exploring whether the same post-training objective can shape skills learned by vision-language-action policies.</p>
   <div class="research-project-demos">
     <figure>
