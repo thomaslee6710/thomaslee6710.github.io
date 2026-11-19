@@ -14,10 +14,25 @@
 .terrain canvas{width:100%;height:clamp(380px,55svh,590px);touch-action:pan-y}
 .terrain-copy,.terrain-controls{width:100%;max-width:none;margin:0;pointer-events:none}
 .terrain-copy{max-width:1250px;margin:0 auto;padding:8px 5vw 0;background:transparent}
-.portrait-frame{width:min(100%,250px);aspect-ratio:1;overflow:hidden;border-radius:16px;justify-self:center}
+.portrait-outline{position:relative;width:min(100%,250px);justify-self:center}
+.portrait-frame{aspect-ratio:1;overflow:hidden;border-radius:16px}
+.portrait-outline::after{
+  content:"";position:absolute;inset:-5px;pointer-events:none;
+  --corner-ink:#638474;
+  background:
+    linear-gradient(var(--corner-ink),var(--corner-ink)) top left/14px 1.5px,
+    linear-gradient(var(--corner-ink),var(--corner-ink)) top left/1.5px 14px,
+    linear-gradient(var(--corner-ink),var(--corner-ink)) top right/14px 1.5px,
+    linear-gradient(var(--corner-ink),var(--corner-ink)) top right/1.5px 14px,
+    linear-gradient(var(--corner-ink),var(--corner-ink)) bottom left/14px 1.5px,
+    linear-gradient(var(--corner-ink),var(--corner-ink)) bottom left/1.5px 14px,
+    linear-gradient(var(--corner-ink),var(--corner-ink)) bottom right/14px 1.5px,
+    linear-gradient(var(--corner-ink),var(--corner-ink)) bottom right/1.5px 14px;
+  background-repeat:no-repeat;
+}
 .home .profile .portrait{display:block;width:100%;height:100%;object-fit:cover;object-position:50% 72%;border-radius:0;transform:scale(1.23);transform-origin:50% 0}
 @media(max-width:700px){
-  .portrait-frame{width:min(62%,220px);justify-self:start}
+  .portrait-outline{width:min(62%,220px);justify-self:start}
 }
 .terrain-copy select,.terrain-copy label{pointer-events:auto;width:fit-content}
 .terrain-controls{padding:4px 5vw 12px}
@@ -61,7 +76,7 @@
 .home-news time{font-family:monospace;font-size:13px}
 </style></head>
 <body class="home"><header><nav aria-label="Main navigation"><b>Thomas Lee</b><a aria-current="page" href="index.html">Home</a><a href="research.html">Research</a><a href="publications.html">Publications</a></nav></header>
-<main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I want to study how robots can use limited data from physically interacting with the world to decide how to act in unstructured environments.</p><a class="worklink" href="resume.pdf">Résumé <span aria-hidden="true">↗</span></a></div><div class="portrait-frame"><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></div></section>
+<main><section class="profile"><div class="profile-text"><div class="kicker">M.S. in Robotics · Carnegie Mellon University</div><h1>Thomas Chun Fai Lee</h1><p>I want to study how robots can use limited data from physically interacting with the world to decide how to act in unstructured environments.</p><a class="worklink" href="resume.pdf">Résumé <span aria-hidden="true">↗</span></a></div><div class="portrait-outline"><div class="portrait-frame"><img class="portrait" src="portrait.jpeg" alt="Thomas Chun Fai Lee at his Carnegie Mellon graduation" width="1024" height="1536"></div></div></section>
 <div class="about-demo-row">
 <section class="about-me" aria-labelledby="about-title">
   <h2 id="about-title">About me</h2>
