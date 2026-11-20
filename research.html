@@ -63,6 +63,7 @@
 .research-projects > .row:focus-within {
   border-top-color: #738e79;
 }
+.research-projects > .row:focus-within + .row { border-top-color: transparent; }
 .research-projects > .row:focus-within h3 { color: #285c43; }
 @media (hover: hover) and (pointer: fine) {
   .research-projects > .row:hover {
@@ -71,6 +72,7 @@
   border-top-color: #738e79;
   }
   .research-projects > .row:hover::before { opacity: 1; box-shadow: 0 8px 18px rgb(30 62 45 / 10%); }
+  .research-projects > .row:hover + .row { border-top-color: transparent; }
   .research-projects > .row:hover h3 { color: #285c43; }
 }
 @media (prefers-reduced-motion: reduce) {
