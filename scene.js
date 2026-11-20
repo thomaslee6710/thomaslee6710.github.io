@@ -101,14 +101,14 @@ function requestStop(state,a){
   if(effort<.13)state.armed=true;
   if(state.armed&&effort>.32){state.armed=false;state.pending=true;}
 }
-const standingDuration=.95;
+const standingDuration=1.30;
 function stopWobble(state){
   const progress=1-state.left/standingDuration;
   return .23*(1-progress)**2*Math.sin(progress*3*Math.PI);
 }
 function projectionProgress(state){
   const stoppedFor=standingDuration-state.left;
-  return state.left>0?clamp((stoppedFor-.18)/.48,0,1):1;
+  return state.left>0?clamp((stoppedFor-.18)/.83,0,1):1;
 }
 function stand(state){
   state.pending=false;
