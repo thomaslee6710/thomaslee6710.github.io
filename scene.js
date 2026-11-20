@@ -106,6 +106,10 @@ function stopWobble(state){
   const progress=1-state.left/standingDuration;
   return .23*(1-progress)**2*Math.sin(progress*3*Math.PI);
 }
+function projectionProgress(state){
+  const stoppedFor=standingDuration-state.left;
+  return state.left>0?clamp((stoppedFor-.18)/.48,0,1):1;
+}
 function stand(state){
   state.pending=false;
   state.left=standingDuration;
@@ -123,6 +127,7 @@ function advance(dt){
   elapsed+=time;
   requestStop(humanPause,angle);
   requestStop(dogPause,dogAngle);
+  const wasHumanStopped=humanPause.left>0;
   const angularSpeed=angleStep(terrainDepth(robot.x,robot.y));
   let amount=0;
   if(humanPause.left>0)humanPause.left=Math.max(0,humanPause.left-time);
@@ -152,6 +157,13 @@ function advance(dt){
     if(humanPause.pending){robot.phase=0;stand(humanPause);}
     trailing=planted;planted=target;target=nextTarget;nextTarget=ghostTarget;side*=-1;
     robot.observed=terrainDepth(planted.x,planted.y);
+    predict();
+  }
+  if(!wasHumanStopped&&humanPause.left>0){
+    // Discard the old forecast and seed a new plan from the stop location.
+    robot.observed=terrainDepth(robot.x,robot.y);
+    target=null;
+    nextTarget=null;
     predict();
   }
   const blend=Math.min(1,time*7);
@@ -284,7 +296,10 @@ function drawSwing(from,to,progress,color,consumeStart=false){
   }
 }
 function drawQuadruped(predictive=false){
-  const a=dogAngle+(predictive?.18:0);
+  const projection=predictive?projectionProgress(dogPause):1;
+  if(projection===0)return;
+  const lead=projection*projection*(3-2*projection);
+  const a=dogAngle+(predictive?.18*lead:0);
   const dog=route(a);
   const scale=Math.min(1,width/530);
   const forwardX=-Math.sin(a),forwardY=Math.cos(a);
@@ -317,7 +332,7 @@ function drawQuadruped(predictive=false){
   const support=legs.filter(leg=>!leg.swing);
   const torso=support.reduce((sum,leg)=>sum+projectY(leg.foot.x,leg.foot.y),0)/support.length-25*scale;
   if(!predictive&&!dogPause.left)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"hsl(213 23% 31% / .72)");
-  ctx.save();clipToTerrain(px-65*scale,px+65*scale,dog.y);
+  ctx.save();ctx.globalAlpha*=projection;clipToTerrain(px-65*scale,px+65*scale,dog.y);
   ctx.lineCap="round";ctx.lineJoin="round";
   if(predictive)ctx.setLineDash([3,4]);
   for(const {front,lateral,from,to,swing,foot,standing} of legs){
@@ -382,7 +397,19 @@ function draw(){
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
   ctx.save();
-  visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
+  const projection=projectionProgress(humanPause);
+  if(projection>0){
+    const location=interpolateFoot(robot,preview,projection);
+    const blend=projection*projection*(3-2*projection);
+    const projectedFeet=ghostFeet.map(([x,y],i)=>[
+      feet[i][0]+(x-feet[i][0])*blend,
+      feet[i][1]+(y-feet[i][1])*blend
+    ]);
+    ctx.save();
+    ctx.globalAlpha*=projection;
+    visibleBody(location.x,location.y,hip+(fy-legLength-hip)*blend,projectedFeet,true);
+    ctx.restore();
+  }
   // Each landed prediction becomes the solid humanoid’s next swing.
   if(landedSwing&&!humanPause.left&&humanStance===0){
     drawSwing(planted,nextTarget,0,"hsl(11 23% 36%)");
