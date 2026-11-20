@@ -5,6 +5,9 @@
 .project-card p { margin: 0; font-size: 0.875rem; }
 .project-card { display: grid; gap: 12px; }
 .project-media { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 10px; background: #eeeae2; }
+.project-preview { position: relative; margin: 0; overflow: hidden; border-radius: 10px; }
+.project-preview img { filter: blur(12px); transform: scale(1.09); }
+.project-preview figcaption { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; background: rgb(20 38 29 / 42%); color: white; text-align: center; font: 600 0.875rem/1.5 ui-monospace, monospace; }
 .project-media--embed { border: 0; }
 .project-media--plot { object-fit: contain; background: white; }
 .project-media--pending { display: grid; place-items: center; font: 0.8rem/1.4 ui-monospace, monospace; color: #52534d; }
@@ -69,7 +72,10 @@
     </ul>
   </article>
   <article class="project-card">
-    <img class="project-media" src="project-underbrush.jpg" alt="A Unitree Go2 traversing outdoor ivy" loading="lazy">
+    <figure class="project-preview">
+      <img class="project-media" src="project-underbrush.jpg" alt="A Unitree Go2 traversing outdoor ivy" loading="lazy">
+      <figcaption>Coming soon</figcaption>
+    </figure>
     <h3>Learned Locomotion Through Underbrush</h3>
     <p class="project-meta">Sep 2026 – Nov 2026 · Robomechanics Lab</p>
     <p>A locomotion policy uses per-leg recurrent encoders to infer entanglement from joint motion and estimated torques. Contact supervision and release rewards train the policy to free caught legs. Unitree Go2 trials in bungee rigs and natural underbrush compared decoded contact estimates against video of catches and releases.</p>
