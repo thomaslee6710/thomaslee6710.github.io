@@ -102,6 +102,7 @@ function requestStop(state,a){
   if(state.armed&&effort>.32){state.armed=false;state.pending=true;}
 }
 const standingDuration=1.30;
+const stepDuration=.62;
 function stopWobble(state){
   const progress=1-state.left/standingDuration;
   return .23*(1-progress)**2*Math.sin(progress*3*Math.PI);
@@ -109,6 +110,14 @@ function stopWobble(state){
 function projectionProgress(state){
   const stoppedFor=standingDuration-state.left;
   return state.left>0?clamp((stoppedFor-.18)/.83,0,1):1;
+}
+// Run a moving dash and soft pulse along the silhouette during reprojection.
+function animateProjection(state,color){
+  const progress=projectionProgress(state);
+  if(progress<=0||progress>=1)return;
+  ctx.lineDashOffset=-21*progress;
+  ctx.shadowColor=color;
+  ctx.shadowBlur=5*Math.sin(Math.PI*progress);
 }
 function stand(state){
   state.pending=false;
@@ -133,7 +142,7 @@ function advance(dt){
   if(humanPause.left>0)humanPause.left=Math.max(0,humanPause.left-time);
   else if(humanPause.pending&&robot.phase===0)stand(humanPause);
   else{
-    amount=time/.9*smoothSpeed(humanPause,angularSpeed,time)/angularSpeed;
+    amount=time/stepDuration*smoothSpeed(humanPause,angularSpeed,time)/angularSpeed;
     if(humanPause.pending)amount=Math.min(amount,1-robot.phase);
   }
   angle+=amount*angularSpeed;
@@ -141,9 +150,9 @@ function advance(dt){
   if(dogPause.left>0)dogPause.left=Math.max(0,dogPause.left-time);
   else{
     const available=Math.max(0,angle-.68-dogAngle);
-    const desired=Math.min(Math.max(0,angularSpeed+correction),available*.9/Math.max(time,.001));
+    const desired=Math.min(Math.max(0,angularSpeed+correction),available*stepDuration/Math.max(time,.001));
     const speed=smoothSpeed(dogPause,desired,time);
-    const next=dogAngle+Math.min(available,time/.9*speed);
+    const next=dogAngle+Math.min(available,time/stepDuration*speed);
     // Both diagonal pairs are in stance just after each half-cycle boundary.
     const stance=Math.ceil((dogAngle-.00001)/.09)*.09+.00001;
     if(dogPause.pending&&stance<=next){dogAngle=stance;stand(dogPause);}
@@ -185,7 +194,7 @@ function pose(){
   const standingGround=projectY(robot.x,robot.y);
   const stanceWidth=5*Math.min(1,width/475);
   for(let i=0;i<feet.length;i++){
-    feet[i][0]+=humanStance*(robot.x*width+(i?stanceWidth:-stanceWidth)-feet[i][0]);
+    feet[i][0]+=humanStance*(robot.x*width+((i?-side:side)*stanceWidth)-feet[i][0]);
     const footGround=projectY(feet[i][0]/width,robot.y);
     feet[i][1]+=humanStance*(footGround-feet[i][1]);
   }
@@ -202,9 +211,9 @@ function slopeTilt(a){
   return clamp(-rise*1.7,-.32,.32)*facing+Math.sin(elapsed*17)*.065;
 }
 function body(px,hip,feet,ghost){
-  const s=clamp(height/255,.78,1.12)*Math.min(1,width/475),dir=ghost?forecast.direction:robot.direction;
+  const s=clamp(height/255,.78,1.12)*Math.min(1,width/475),dir=ghost?robot.direction+(forecast.direction-robot.direction)*projectionProgress(humanPause):robot.direction;
   ctx.save();ctx.lineJoin="round";ctx.lineCap="round";
-  if(ghost)ctx.setLineDash([4,4]);
+  if(ghost){ctx.setLineDash([4,4]);animateProjection(humanPause,"#a26959");}
   function limb(points,ink,weight){
     ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));
     ctx.strokeStyle=ghost?"hsl(11 23% 32% / .76)":ink;ctx.lineWidth=ghost?1.4:weight*s;ctx.stroke();
@@ -212,8 +221,11 @@ function body(px,hip,feet,ghost){
   function plate(x,y,w,h,r,color){
     ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(ghost)ctx.stroke();else{ctx.fillStyle=color;ctx.fill();}
   }
-  feet.forEach(([fx,fy],i)=>{
-    const hx=px+(i?3:-3)*s,hy=hip;
+  // The support and swing slots alternate; keep each anatomical leg on its own hip.
+  const legs=feet.map(([fx,fy],i)=>({fx,fy,lateral:i?-side:side}));
+  legs.sort((a,b)=>a.lateral-b.lateral);
+  for(const {fx,fy,lateral} of legs){
+    const hx=px+lateral*3*s,hy=hip;
     const dx=fx-hx,dy=fy-3*s-hy;
     const reach=Math.hypot(dx,dy);
     const segment=25*s;
@@ -221,19 +233,14 @@ function body(px,hip,feet,ghost){
     const ux=reach>0?dx/reach:0,uy=reach>0?dy/reach:1;
     const ankle=[hx+ux*dist,hy+uy*dist];
     const bend=Math.sqrt(Math.max(0,segment**2-(dist/2)**2));
-    const knee=[(hx+ankle[0])/2+(dir<0?-1:1)*uy*bend,(hy+ankle[1])/2-(dir<0?-1:1)*ux*bend];
-    const facing=dir<0?-1:1;
-    const thigh=clamp(Math.atan2(facing*(knee[0]-hx),knee[1]-hy),-.65,1.18);
-    const limitedKnee=[hx+facing*segment*Math.sin(thigh),hy+segment*Math.cos(thigh)];
-    const shin=Math.atan2(facing*(ankle[0]-knee[0]),ankle[1]-knee[1]);
-    const flex=clamp(thigh-shin,.16,2.15);
-    const foot=ghost?[limitedKnee[0]+facing*segment*Math.sin(thigh-flex),limitedKnee[1]+segment*Math.cos(thigh-flex)]:ankle;
-    limb([[hx,hy],ghost?limitedKnee:knee,foot,[foot[0]+dir*8*s,foot[1]+s]],i?"hsl(11 23% 37%)":"hsl(11 21% 31%)",6);
-  });
+    // Project forward knee flexion continuously as the walker turns on the oval.
+    const knee=[hx+ux*dist/2+dir*uy*bend,hy+uy*dist/2-dir*ux*bend];
+    limb([[hx,hy],knee,ankle,[ankle[0]+dir*8*s,ankle[1]+s]],lateral>0?"hsl(11 23% 37%)":"hsl(11 21% 31%)",6);
+  }
   function arm(near){
     const sideOfTorso=near?1:-1;
-    const cycle=(!ghost&&humanPause.left>0?0:ghost?-side:side)*Math.cos(robot.phase*Math.PI)*sideOfTorso;
-    const facing=dir<0?-1:1;
+    const cycle=(!ghost&&humanPause.left>0?0:side)*Math.cos(robot.phase*Math.PI)*sideOfTorso;
+    const facing=dir;
     const shoulder=[px+sideOfTorso*6*s,hip-22*s];
     const upper=cycle*.56;
     const forearm=upper+.32+.44*Math.max(0,cycle);
@@ -334,7 +341,7 @@ function drawQuadruped(predictive=false){
   if(!predictive&&!dogPause.left)for(const leg of legs)drawSwing(leg.from,leg.to,leg.swing,"hsl(213 23% 31% / .72)");
   ctx.save();ctx.globalAlpha*=projection;clipToTerrain(px-65*scale,px+65*scale,dog.y);
   ctx.lineCap="round";ctx.lineJoin="round";
-  if(predictive)ctx.setLineDash([3,4]);
+  if(predictive){ctx.setLineDash([3,4]);animateProjection(dogPause,"#658299");}
   for(const {front,lateral,from,to,swing,foot,standing} of legs){
     const [hipOffsetX,hipOffsetY]=projectBody(front*16,lateral*7);
     const hipX=px+hipOffsetX*Math.cos(tilt)-hipOffsetY*Math.sin(tilt);
@@ -440,7 +447,7 @@ function resize(){
   walker.style.top=-headroom+"px";walker.style.height=(height+headroom)+"px";
   walker.width=canvas.width;walker.height=Math.ceil((height+headroom)*ratio);
   ctx.setTransform(ratio,0,0,ratio,0,headroom*ratio);grid.height=walker.height;mesh.setTransform(ratio,0,0,ratio,0,headroom*ratio);
-  stride=clamp(68/width,.025,.15);pelvisY=undefined;predict();updateGrid();draw();
+  stride=Math.min(.15,25*clamp(height/255,.78,1.12)*Math.min(1,width/475)/width);pelvisY=undefined;predict();updateGrid();draw();
 }
 function changeDepth(delta){
   if(!delta)return;
