@@ -73,17 +73,18 @@ function updateGrid(){
 function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
 }
-let target, nextTarget;
+let target, nextTarget, ghostTarget;
 let landedSwing=false;
 function footfall(a,leg){
   const p=route(a);
-  return {...p,y:p.y+.018*leg};
+  return {...p,y:p.y+.018*leg,angle:a};
 }
 function predict(){
   const step=angleStep(robot.observed);
   if(!target)target=footfall(angle+step,-side);
-  nextTarget=footfall(angle+2*step,side);
-  forecast={...target,depth:robot.observed};
+  if(!nextTarget)nextTarget=footfall(angle+2*step,side);
+  ghostTarget=footfall(Math.max(angle+3*step,nextTarget.angle+step*.5),-side);
+  forecast={...nextTarget,depth:robot.observed};
 }
 function interpolateFoot(a,b,t){
   const blend=t*t*(3-2*t);
@@ -149,7 +150,7 @@ function advance(dt){
     robot.phase-=1;
     landedSwing=true;
     if(humanPause.pending){robot.phase=0;stand(humanPause);}
-    trailing=planted;planted=target;target=nextTarget;side*=-1;
+    trailing=planted;planted=target;target=nextTarget;nextTarget=ghostTarget;side*=-1;
     robot.observed=terrainDepth(planted.x,planted.y);
     predict();
   }
@@ -373,11 +374,10 @@ function drawEffortLines(a,centerY,spread,color="hsl(11 23% 36%)"){
 function draw(){
   ctx.clearRect(0,-headroom,width,height+headroom);
   ctx.drawImage(grid,0,-headroom,width,height+headroom);
-  const preview=interpolateFoot(target,nextTarget,robot.phase);
+  const preview=interpolateFoot(nextTarget,ghostTarget,robot.phase);
   const fy=height*(.14+.72*preview.y+drop*forecast.depth);
-  const ghostSwing=interpolateFoot(planted,nextTarget,robot.phase);
-  const ghostFeet=[[target.x*width,projectY(target.x,target.y)],
-    [ghostSwing.x*width,projectY(ghostSwing.x,ghostSwing.y)-swingLift(planted,nextTarget,robot.phase)]];
+  const ghostFeet=[[nextTarget.x*width,projectY(nextTarget.x,nextTarget.y)],
+    swingPoint(target,ghostTarget,robot.phase)];
   const legLength=clamp(height/255,.78,1.12)*Math.min(1,width/475)*43;
   const {ground,feet}=pose();
   const hip=pelvisY??ground-legLength;
@@ -385,6 +385,7 @@ function draw(){
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
   // Each landed prediction becomes the solid humanoid’s next swing.
   if(landedSwing&&!humanPause.left&&humanStance===0){
+    drawSwing(planted,nextTarget,0,"hsl(11 23% 36%)");
     drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)",true);
   }
   drawQuadruped(true);
