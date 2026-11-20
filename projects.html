@@ -10,6 +10,7 @@
 .project-media--pending { display: grid; place-items: center; font: 0.8rem/1.4 ui-monospace, monospace; color: #52534d; }
 @media (max-width: 850px) { .projects-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .projects-grid { grid-template-columns: 1fr; } }
+.project-links { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .project-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .project-tags li { padding: 1px 6px; border: 1px solid #b9c6ba; border-radius: 999px; font: 0.6875rem/1.5 ui-monospace, monospace; }
 .project-card .project-meta {
@@ -57,9 +58,8 @@
     <iframe class="project-media project-media--embed" src="https://www.youtube-nocookie.com/embed/kSXKjTxKpuA" title="Quad-SDK demonstration" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     <h3>Quad-SDK</h3>
     <p class="project-meta">Present · Robomechanics Lab</p>
-    <p><a href="https://github.com/robomechanics/quad-sdk">900+ GitHub stars · 170+ forks</a></p>
     <p>An open-source ROS framework for quadrupedal locomotion developed at CMU’s Robomechanics Lab. Quad-SDK integrates planning, control, and state estimation through shared simulation and hardware interfaces. ROS 2 integration and a C++ policy runtime support deployment of learned controllers on Unitree quadrupeds.</p>
-    <p><a href="https://www.youtube.com/watch?v=kSXKjTxKpuA">Watch on YouTube</a></p>
+    <p class="project-links"><span><a href="https://github.com/robomechanics/quad-sdk">GitHub</a> (900+ stars · 170+ forks)</span> <a href="https://www.youtube.com/watch?v=kSXKjTxKpuA">YouTube</a></p>
     <ul class="project-tags" aria-label="Technical topics">
       <li>ROS 2</li>
       <li>C++</li>
@@ -86,7 +86,7 @@
     <h3>Duty Factor Predicts Robust Constrained Quadrupedal Locomotion Across Gait Types</h3>
     <p class="project-meta">Jun 2026 – Sep 2026 · Robomechanics Lab</p>
     <p>Duty factor, the fraction of a stride each foot spends in contact, predicted robustness across gait types and controllers. A learned selector adapts duty factor to narrow stances. Hardware validation comprised 45 Unitree Go2 trials on a 15 cm beam using centroidal MPC without dedicated balance actuation.</p>
-    <p><a href="https://arxiv.org/abs/2609.22073">Read the paper</a></p>
+    <p class="project-links"><a href="https://arxiv.org/abs/2609.22073">arXiv</a> <a href="https://github.com/robomechanics/beamwalking_RL">GitHub</a></p>
     <ul class="project-tags" aria-label="Technical topics">
       <li>Centroidal MPC</li>
       <li>Isaac Lab</li>
@@ -102,7 +102,7 @@
     <h3>Microtaur: Harmonic Gait Transfer Across Spine Morphologies</h3>
     <p class="project-meta">Sep 2026 · Robomechanics Lab</p>
     <p>PPO discovers periodic gaits for rigid, roll, pitch, and yaw spine configurations. Offline Fourier fitting converts each policy’s motor targets into a morphology-specific central pattern generator. The resulting embedded controller replays coordinated joint commands at 50 Hz using a shared clock and fixed coefficients, without state estimation or neural-network inference.</p>
-    <p><a href="https://github.com/robomechanics/microtaur_RL/tree/cpg-rl">View code and results</a></p>
+    <p class="project-links"><a href="https://github.com/robomechanics/microtaur_RL/tree/cpg-rl">GitHub</a></p>
     <ul class="project-tags" aria-label="Technical topics">
       <li>Python</li>
       <li>PPO</li>
@@ -137,7 +137,7 @@
     <h3>7-DOF Arm Kinematics and Trajectory Planning</h3>
     <p class="project-meta">Nov 2024 – Dec 2024 · CMU 16-384 Robot Kinematics and Dynamics · Prof. <a href="https://www.ri.cmu.edu/ri-faculty/jeffrey-ichnowski/">Jeffrey Ichnowski</a></p>
     <p>A 7-DOF Franka Emika Panda picks up markers and draws lines and spline arcs on a tilted whiteboard calibrated by hand-guiding the arm. The planner uses modified Denavit–Hartenberg kinematics and Jacobian pseudoinverse IK to convert Cartesian spline trajectories into joint commands streamed at 50 Hz.</p>
-    <p><a href="https://github.com/thomaslee6710/franka_whiteboard_plotter">Code</a></p>
+    <p class="project-links"><a href="https://github.com/thomaslee6710/franka_whiteboard_plotter">GitHub</a></p>
     <ul class="project-tags" aria-label="Technical topics">
       <li>Python</li>
       <li>Inverse Kinematics</li>
