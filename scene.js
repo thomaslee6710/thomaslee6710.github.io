@@ -74,7 +74,7 @@ function angleStep(depth){
   return stride*(1-.50*Math.min(Math.abs(depth),1.4))/.36;
 }
 let target, nextTarget;
-const followedFootsteps=[null,null];
+let landedSwing=false;
 function footfall(a,leg){
   const p=route(a);
   return {...p,y:p.y+.018*leg};
@@ -147,7 +147,7 @@ function advance(dt){
   robot.phase+=amount;
   if(robot.phase>=1){
     robot.phase-=1;
-    followedFootsteps[side>0?1:0]={from:{...planted},to:{...nextTarget}};
+    landedSwing=true;
     if(humanPause.pending){robot.phase=0;stand(humanPause);}
     trailing=planted;planted=target;target=nextTarget;side*=-1;
     robot.observed=terrainDepth(planted.x,planted.y);
@@ -162,13 +162,13 @@ function swingLift(from,to,phase){
   const clearance=height*.040+clamp(rise*.33,0,15);
   return clearance*Math.sin(Math.PI*phase);
 }
-function swingPoint(phase){
-  const p=interpolateFoot(trailing,target,phase);
-  return [p.x*width,projectY(p.x,p.y)-swingLift(trailing,target,phase)];
+function swingPoint(from,to,phase){
+  const p=interpolateFoot(from,to,phase);
+  return [p.x*width,projectY(p.x,p.y)-swingLift(from,to,phase)];
 }
 function pose(){
   const ground=projectY(planted.x,planted.y);
-  const feet=[[planted.x*width,ground],swingPoint(robot.phase)];
+  const feet=[[planted.x*width,ground],swingPoint(trailing,target,robot.phase)];
   const standingGround=projectY(robot.x,robot.y);
   const stanceWidth=5*Math.min(1,width/475);
   for(let i=0;i<feet.length;i++){
@@ -214,8 +214,8 @@ function body(px,hip,feet,ghost){
     const limitedKnee=[hx+facing*segment*Math.sin(thigh),hy+segment*Math.cos(thigh)];
     const shin=Math.atan2(facing*(ankle[0]-knee[0]),ankle[1]-knee[1]);
     const flex=clamp(thigh-shin,.16,2.15);
-    const foot=[limitedKnee[0]+facing*segment*Math.sin(thigh-flex),limitedKnee[1]+segment*Math.cos(thigh-flex)];
-    limb([[hx,hy],limitedKnee,foot,[foot[0]+dir*8*s,foot[1]+s]],i?"hsl(11 23% 37%)":"hsl(11 21% 31%)",6);
+    const foot=ghost?[limitedKnee[0]+facing*segment*Math.sin(thigh-flex),limitedKnee[1]+segment*Math.cos(thigh-flex)]:ankle;
+    limb([[hx,hy],ghost?limitedKnee:knee,foot,[foot[0]+dir*8*s,foot[1]+s]],i?"hsl(11 23% 37%)":"hsl(11 21% 31%)",6);
   });
   function arm(near){
     const sideOfTorso=near?1:-1;
@@ -261,12 +261,9 @@ function visibleBody(u,v,hip,feet,ghost){
   body(center,hip,feet,ghost);
   ctx.restore();
 }
-function drawSwing(from,to,progress,color){
+function drawSwing(from,to,progress,color,consumeStart=false){
   ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.lineCap="round";
-  function point(phase){
-    const p=interpolateFoot(from,to,phase);
-    return [p.x*width,projectY(p.x,p.y)-swingLift(from,to,phase)];
-  }
+  const point=phase=>swingPoint(from,to,phase);
   let start=point(progress);
   for(let i=1;i<=20;i++){
     const phase=progress+(1-progress)*i/20;
@@ -278,7 +275,7 @@ function drawSwing(from,to,progress,color){
     ctx.beginPath();ctx.moveTo(...start);ctx.lineTo(...end);ctx.stroke();
     ctx.restore();start=end;
   }
-  for(const contact of [from,to]){
+  for(const contact of consumeStart && progress>0?[to]:[from,to]){
     const px=contact.x*width;
     ctx.save();clipToTerrain(px-9,px+9,contact.y);
     ctx.beginPath();ctx.ellipse(px,projectY(contact.x,contact.y),7,3,0,0,2*Math.PI);ctx.stroke();
@@ -386,9 +383,9 @@ function draw(){
   const hip=pelvisY??ground-legLength;
   ctx.save();
   visibleBody(preview.x,preview.y,fy-legLength,ghostFeet,true);
-  // Show only foothold paths that the dashed humanoid has already landed on.
-  for(const path of followedFootsteps){
-    if(path)drawSwing(path.from,path.to,robot.phase,"hsl(11 23% 36%)");
+  // Each landed prediction becomes the solid humanoid’s next swing.
+  if(landedSwing&&!humanPause.left&&humanStance===0){
+    drawSwing(trailing,target,robot.phase,"hsl(11 23% 36%)",true);
   }
   drawQuadruped(true);
   drawQuadruped();
